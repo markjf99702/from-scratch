@@ -237,6 +237,7 @@ async function printSheet(r) {
       <label><input type="radio" name="paper" value="letter"><span><b>Letter paper</b> 8½ × 11 inches</span></label>
       <label><input type="radio" name="paper" value="a4"><span><b>A4 paper</b></span></label>
     </div>
+    <label class="check-row"><input type="checkbox" id="pLines" checked> Draw ruled lines on an index card (untick for cards that already have them)</label>
     ${has ? '<label class="check-row"><input type="checkbox" id="pPhoto"> Put the photo of the card at the bottom (on paper, not on an index card)</label>' : ''}
     <p class="fine">It prints the amounts as they’re shown now${Math.abs(f - 1) > 1e-9 ? ` (${esc(factorWords(f).toLowerCase())})` : ''}. For index cards, set the printer to 4 × 6 paper.</p>
     <div class="row"><button type="button" class="btn primary" data-a="print">Print</button></div>`, (body, close) => {
@@ -244,8 +245,9 @@ async function printSheet(r) {
       if (!e.target.closest('[data-a="print"]')) return;
       const paper = body.querySelector('input[name="paper"]:checked').value;
       const withPhoto = paper !== 'card' && $('pPhoto')?.checked;
+      const lines = $('pLines').checked;
       close();
-      await printRecipe(r, { paper, factor: f, mode: unitsFor(), photo: withPhoto ? await photos.get(r.id) : null });
+      await printRecipe(r, { paper, factor: f, mode: unitsFor(), photo: withPhoto ? await photos.get(r.id) : null, lines });
     });
   });
 }

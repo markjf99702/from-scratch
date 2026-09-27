@@ -9,7 +9,7 @@ import { recipePage, rerenderRecipe } from './recipe-page.js';
 import { cookPage, leaveCook } from './cook.js';
 import { editPage, pastePage, editing } from './edit.js';
 import { initTimers, timers } from './timers.js';
-import { initSync, chip, card } from './sync.js';
+import { initSync, chip, card, syncState } from './sync.js';
 import { ingredientsHTML, metaHTML, UNIT_MODES } from './view.js';
 
 let route = '';
@@ -414,4 +414,4 @@ if ('serviceWorker' in navigator && !('single' in document.documentElement.datas
 }
 
 // For the screenshot tool and tests: the stores, so they can set things up without tapping through.
-window.fromScratch = { box, prefs, photos, timers, addSamples };
+window.fromScratch = { box, prefs, photos, timers, addSamples, sync: syncState };

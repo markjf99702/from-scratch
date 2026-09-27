@@ -548,3 +548,17 @@ test('the skill’s script knows the same unit words as the page', { skip: !pyth
   const script = JSON.parse(execFileSync(python, [join(root, 'skill/from-scratch-cards/scripts/make_card_link.py'), '--units'], { encoding: 'utf8' }));
   assert.deepEqual([...script].sort(), UNIT_NAMES.map(u => u.name).sort());
 });
+
+test('the offline copy lists every file the page uses', () => {
+  const sw = readFileSync(join(root, 'sw.js'), 'utf8');
+  const shell = JSON.parse('[' + /const SHELL = \[([\s\S]*?)\];/.exec(sw)[1].replace(/\/\/[^\n]*/g, '').replace(/'/g, '"').replace(/,\s*$/, '') + ']');
+  const want = [
+    ...readdirSync(join(root, 'js')).map(f => 'js/' + f),
+    ...readdirSync(join(root, 'css')).map(f => 'css/' + f),
+    ...readdirSync(join(root, 'fonts')).filter(f => f.endsWith('.woff2')).map(f => 'fonts/' + f),
+    ...readdirSync(root).filter(f => /^icon.*\.(png|svg)$/.test(f)),
+    'index.html', 'manifest.webmanifest', 'samples/rosa-card.jpg',
+  ];
+  for (const f of want) assert.ok(shell.includes(f), `sw.js is missing ${f}`);
+  for (const f of shell) if (f !== './') assert.ok(want.includes(f), `sw.js lists ${f}, which isn't there`);
+});

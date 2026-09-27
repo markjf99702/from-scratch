@@ -590,7 +590,7 @@ body.cooking.has-timers .cook-body { padding-bottom: 120px; }
   .p-photo { margin: 12pt 0 0; break-inside: avoid; }
   .p-photo img { max-width: 100%; max-height: 3.6in; border: 1pt solid #ccc; }
   /* a 4 x 6 inch index card: ingredients and steps in two columns, on the card's lines */
-  html[data-print='card'] .pcard { background: #fffdf6; }
+  html[data-lines='0'] .p-body { background: none; }
   html[data-print='card'] .p-body { columns: 2; column-gap: .22in; }
   html[data-print='card'] .p-ings { margin-bottom: 13pt; }
   html[data-print='card'] .p-steps { break-before: auto; }
@@ -603,7 +603,7 @@ body.cooking.has-timers .cook-body { padding-bottom: 120px; }
   html[data-print='page'] .p-from b { font-size: 20pt; }
   html[data-print='page'] .p-head { padding-bottom: 6pt; }
   html[data-print='page'] .p-meta { font-size: 10pt; margin: 6pt 0 10pt; }
-  html[data-print='page'] .p-body { display: grid; grid-template-columns: 2.35in 1fr; gap: 0 .35in; background: none; }
+  html[data-print='page'] .p-body { display: grid; grid-template-columns: 2.6in 1fr; gap: 0 .35in; background: none; }
   html[data-print='page'] .p-ings li { display: grid; grid-template-columns: 1.05in 1fr; gap: 6pt; padding: 2pt 0; border-bottom: .5pt solid #ddd; }
   html[data-print='page'] .p-ings .p-sect { display: block; border: 0; padding-top: 8pt; }
   html[data-print='page'] .p-steps li { margin-bottom: 7pt; }

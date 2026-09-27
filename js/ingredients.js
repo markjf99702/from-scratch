@@ -278,7 +278,7 @@ export function bestUS(ml, { single = false, spoons = false, loose = false } = {
     }
   }
   for (let t = 1; t <= 8; t += 0.5) {
-    if (t > 4 && !Number.isInteger(t)) continue;
+    if (t > 5 && !Number.isInteger(t)) continue;
     add([{ q: t, u: 'tbsp' }], t * 3, t > 3 ? 0.008 * (t - 3) : 0);
     if (!single && Number.isInteger(t) && t < 8) for (const x of [0.5, 1, 2]) add([{ q: t, u: 'tbsp' }, { q: x, u: 'tsp' }], t * 3 + x, two);
   }

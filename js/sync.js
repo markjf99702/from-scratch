@@ -114,7 +114,11 @@ async function run(tries = 0) {
       }
     }
     // Nothing new on either side since the last sync: nothing to do.
-    if (file && file.id === st.fileId && file.version === st.version && !st.pending && !file.extra?.length) return;
+    if (file && file.id === st.fileId && file.version === st.version && !st.pending && !file.extra?.length) {
+      st.last = Date.now();
+      saveSt();
+      return;
+    }
     let remote = null, merged = local, saved = file;
     if (file) {
       remote = await download(file.id);

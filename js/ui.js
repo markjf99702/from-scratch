@@ -33,7 +33,9 @@ export function toast(message, action) {
 // The sheet that slides up (scale, share, print, confirmations). bind() wires up what's inside once it's drawn.
 export function sheet(html, bind) {
   const dlg = $('sheet');
-  const body = dlg.querySelector('.sheet-body');
+  // A fresh body each time, so listeners from the last sheet don't stay attached.
+  const old = dlg.querySelector('.sheet-body'), body = old.cloneNode(false);
+  old.replaceWith(body);
   body.innerHTML = html;
   if (!dlg.open) {
     if (typeof dlg.showModal === 'function') dlg.showModal(); else dlg.setAttribute('open', '');
