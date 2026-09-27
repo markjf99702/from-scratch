@@ -323,7 +323,7 @@ button.tag { cursor: pointer; }
 .empty-tin span:nth-child(3) { display: none; }
 .ways { display: grid; gap: 12px; grid-template-columns: 1fr; text-align: left; margin: 0 0 18px; }
 @media (min-width: 700px) { .ways { grid-template-columns: repeat(3, 1fr); } .ways.pair { grid-template-columns: 1fr 1fr; } }
-.way { display: grid; grid-template-columns: auto 1fr; column-gap: 12px; align-items: start; padding: 16px; background: var(--card); border-radius: 8px; box-shadow: var(--shadow); text-decoration: none; color: var(--ink); }
+.way { display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto 1fr; column-gap: 12px; align-items: start; padding: 16px; background: var(--card); border-radius: 8px; box-shadow: var(--shadow); text-decoration: none; color: var(--ink); }
 .way b { font-size: 18px; }
 .way > span:last-child { grid-column: 2; color: var(--ink-2); font-size: 15.5px; line-height: 1.45; }
 .way-icon { grid-row: span 2; width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: var(--tin); color: var(--tin-ink); }
@@ -376,7 +376,7 @@ li.ing:not(:has(.tick)) { padding-left: 0; }
 .ing.got .amt, .ing.got .what { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--red); text-decoration-thickness: 2px; }
 .amt { font-weight: 800; color: var(--ink); font-variant-numeric: lining-nums; overflow-wrap: anywhere; }
 .amt .pre { font-weight: 500; }
-.size { font-weight: 600; }
+.size { font-weight: 400; color: var(--muted); }
 .what { color: var(--ink); min-width: 0; overflow-wrap: anywhere; }
 .what .note, .what .of { color: var(--muted); }
 .what .alt { color: var(--muted); }
@@ -422,7 +422,7 @@ li.ing:not(:has(.tick)) { padding-left: 0; }
 .pick { display: flex; align-items: center; gap: 10px; font-weight: 700; margin: -4px 0 10px; padding: 6px 0; border-bottom: 1px dashed var(--line-2); }
 .pick input { width: 22px; height: 22px; accent-color: var(--tin); }
 .review .ruled { margin: 8px 0 12px; }
-.bar-bottom { position: sticky; bottom: 12px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; padding: 10px 0; }
+.bar-bottom { position: sticky; bottom: 0; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 0 -16px; padding: 22px 16px calc(14px + env(safe-area-inset-bottom)); background: linear-gradient(to bottom, transparent, var(--bg) 45%); }
 .bar-bottom .btn.primary { box-shadow: 0 2px 0 var(--tin-lo), 0 8px 20px -8px rgba(0, 0, 0, .5); }
 .howto { padding-left: 1.3em; margin: 6px 0 14px; }
 .howto li { margin-bottom: 8px; }
