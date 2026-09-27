@@ -315,6 +315,9 @@ assert.equal(await page.evaluate(() => navigator.clipboard.readText()), link, 'C
 await page.click('[data-a="text"]');
 assert.match(await page.evaluate(() => navigator.clipboard.readText()), /^Cinnamon Crumb Coffee Cake \(Grandma Rosa’s\)[\s\S]*- 1½ cups all-purpose flour/);
 await page.keyboard.press('Escape');
+await page.goto(link);
+await page.locator('.review').waitFor();
+assert.equal(await page.locator('text=Already in your box').count(), 1, 'your own link finds your copy');
 
 const sis = await device();
 await sis.page.goto(link);

@@ -62,6 +62,7 @@ async function find(meta, fields) {
   return x?.files || [];
 }
 async function download(id) {
+  if (!tok?.token) throw { auth: true };
   const tokNow = tok;
   const r = await fetch(`${API}drive/v3/files/${id}?alt=media`, { headers: { Authorization: 'Bearer ' + tokNow.token } }).catch(() => { throw { net: true }; });
   if (r.status === 401) { put(KT, null); tok = null; throw { auth: true }; }

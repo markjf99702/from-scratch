@@ -37,7 +37,7 @@ screen kept on. It syncs across your own devices through Google Drive, and a rec
   sizes stay as they are, and it says so when a step has amounts of its own.
 - **Cups or grams.** "Cups" shows cups, spoons, ounces and pounds; "Grams" weighs flour, sugars, butter, oats, rice,
   cocoa, honey, nuts and other baking staples by their USDA FoodData Central cup weights (every figure has its NDB number
-  in `js/density.js`), shows other liquids in millilitres, and leaves teaspoons as spoons. Oven temperatures and pan sizes
+  in `js/density.js`), turns other cups into millilitres, and leaves teaspoons as spoons. Oven temperatures and pan sizes
   in the steps convert too (350°F → 180°C, 9x13-inch → 23 × 33 cm). Anything without a USDA weight keeps its cups.
 - **Cook mode**: one step at a time in large type, the ingredients that step uses right under it, and the screen kept
   on with the Screen Wake Lock. Swipe, tap or use the arrow keys to move between steps.

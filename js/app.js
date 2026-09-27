@@ -1,8 +1,8 @@
 // The page: which screen goes with which address, the recipe box, adding recipes, links and settings.
 import { box, prefs, KEY, PREFS } from './store.js';
 import { photos, blobToDataURL, dataURLToBlob } from './photos.js';
-import { allTags, hasTag, matches, possessive, yieldText, timeLine, fold, today, canon, cleanRecipe } from './recipe.js';
-import { readIncoming, LINK_RX } from './share.js';
+import { allTags, hasTag, matches, possessive, fold, today, canon } from './recipe.js';
+import { readIncoming, LINK_RX, forLink } from './share.js';
 import { SAMPLES, SAMPLE_PHOTOS } from './samples.js';
 import { app, $, esc, ui, on, go, toast, sheet, closeSheet, sheetOpen, icon, plural, canDownload, download } from './ui.js';
 import { recipePage, rerenderRecipe } from './recipe-page.js';
@@ -232,9 +232,11 @@ async function incoming(data) {
 }
 
 function showIncoming(got) {
+  // The same words as the copy already here, ignoring what only this device knows (when it was added, a sample mark).
+  const words = r => { const { added, ...rest } = forLink(r); return canon(rest); };
   const rows = got.recipes.map(r => {
     const mine = box.get(r.id);
-    const same = mine && canon({ ...mine, t: 0, added: '', check: '' }) === canon({ ...cleanRecipe({ ...r, t: 0 }), added: '', check: '' });
+    const same = !!mine && words(mine) === words(r);
     return { r, mine, same, on: !mine };
   });
   const one = rows.length === 1;
@@ -290,7 +292,7 @@ function settingsPage() {
       <h1 class="page-title">Settings</h1>
       <section class="paper set">
         <h2>Amounts</h2>
-        <p>How recipes open; you can switch on any recipe too. <b>Cups</b> shows cups, spoons, ounces and pounds. <b>Grams</b> weighs flour, sugar, butter and other baking staples, and shows other liquids in millilitres, leaving teaspoons as spoons.</p>
+        <p>How recipes open; you can switch on any recipe too. <b>Cups</b> shows cups, spoons, ounces and pounds. <b>Grams</b> weighs flour, sugar, butter and other baking staples, turns other cups into millilitres, and leaves teaspoons as spoons.</p>
         <div class="seg" role="group" aria-label="Units">${UNIT_MODES.map(([k, l]) => `<button type="button" data-units="${k}" aria-pressed="${unit === k}">${l}</button>`).join('')}</div>
       </section>
       <section class="paper set">
