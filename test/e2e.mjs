@@ -82,9 +82,12 @@ await page.locator('.card[data-id="sample-rosa-coffee-cake"] .clip:not([hidden])
 await fits(page, 'the box');
 
 // Search and tags.
-await page.fill('#q', 'walt');
+const searchBox = await page.$('#q');
+await page.click('#q');
+await page.keyboard.type('walt', { delay: 60 });
 await page.waitForFunction(() => document.querySelectorAll('.card').length === 1, null, { polling: 100 });
 assert.match(await page.locator('.card').innerText(), /Uncle Walt’s/);
+assert.ok(await searchBox.evaluate(el => el.isConnected && document.activeElement === el), 'the search field stays put while typing');
 await page.fill('#q', 'buttermilk');
 await page.locator('.card:has-text("Pancakes")').waitFor();
 assert.equal(await page.locator('.card').count(), 1, 'search reads the ingredients');

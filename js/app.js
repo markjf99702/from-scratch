@@ -49,9 +49,6 @@ function home() {
   const all = box.all();
   const tags = allTags(all);
   if (ui.tag && !tags.some(t => fold(t.tag) === fold(ui.tag))) ui.tag = '';
-  const shown = all.filter(r => (!ui.tag || hasTag(r, ui.tag)) && matches(r, ui.q));
-  const sorted = ui.sort === 'new' ? [...shown].sort((x, y) => (y.added || '').localeCompare(x.added || '') || y.t - x.t)
-    : ui.sort === 'whose' ? [...shown].sort((x, y) => fold(x.from || '~').localeCompare(fold(y.from || '~')) || fold(x.title).localeCompare(fold(y.title))) : shown;
   const hasSamples = all.some(r => r.sample);
 
   if (!all.length) {
@@ -70,6 +67,39 @@ function home() {
     return;
   }
 
+  app.innerHTML = `
+    <div class="page">
+      <div class="finder">
+        <label class="search">${icon.search}<span class="sr">Search</span><input type="search" id="q" value="${esc(ui.q)}" placeholder="Search recipes, people, ingredients" autocomplete="off" enterkeyhint="search"></label>
+        ${tags.length ? `<nav class="dividers" aria-label="Tags"><button type="button" class="tab" data-tag="" aria-pressed="${!ui.tag}">All <span>${all.length}</span></button>${tags.map(t => `<button type="button" class="tab" data-tag="${esc(t.tag)}" aria-pressed="${fold(ui.tag) === fold(t.tag)}">${esc(t.tag)} <span>${t.n}</span></button>`).join('')}</nav>` : ''}
+        <div class="sortline"><span id="count"></span>
+          <label class="sort">Sort <select id="sort"><option value="az"${ui.sort === 'az' ? ' selected' : ''}>A to Z</option><option value="whose"${ui.sort === 'whose' ? ' selected' : ''}>By whose</option><option value="new"${ui.sort === 'new' ? ' selected' : ''}>Newest</option></select></label></div>
+      </div>
+      <div id="homeList"></div>
+      ${hasSamples ? '<p class="samples-note"><button type="button" class="linkish" data-act="unsample">Take out the sample recipes</button></p>' : ''}
+      ${footer()}
+    </div>`;
+  drawList();
+  on({
+    click: homeClick,
+    // Typing in the search redraws only the cards, so the field (and a phone's keyboard) stays put.
+    input(e) {
+      if (e.target.id !== 'q') return;
+      ui.q = e.target.value;
+      clearTimeout(home.t);
+      home.t = setTimeout(drawList, 120);
+    },
+    change(e) { if (e.target.id === 'sort') { ui.sort = e.target.value; home(); } },
+  });
+}
+
+function drawList() {
+  const host = $('homeList');
+  if (!host) return;
+  const all = box.all();
+  const shown = all.filter(r => (!ui.tag || hasTag(r, ui.tag)) && matches(r, ui.q));
+  const sorted = ui.sort === 'new' ? [...shown].sort((x, y) => (y.added || '').localeCompare(x.added || '') || y.t - x.t)
+    : ui.sort === 'whose' ? [...shown].sort((x, y) => fold(x.from || '~').localeCompare(fold(y.from || '~')) || fold(x.title).localeCompare(fold(y.title))) : shown;
   let list = '';
   if (ui.sort === 'whose') {
     let last = null;
@@ -80,30 +110,9 @@ function home() {
     }
     list += '</ul>';
   } else list = `<ul class="cards">${sorted.map(cardHTML).join('')}</ul>`;
-
-  app.innerHTML = `
-    <div class="page">
-      <div class="finder">
-        <label class="search">${icon.search}<span class="sr">Search</span><input type="search" id="q" value="${esc(ui.q)}" placeholder="Search recipes, people, ingredients" autocomplete="off" enterkeyhint="search"></label>
-        ${tags.length ? `<nav class="dividers" aria-label="Tags"><button type="button" class="tab" data-tag="" aria-pressed="${!ui.tag}">All <span>${all.length}</span></button>${tags.map(t => `<button type="button" class="tab" data-tag="${esc(t.tag)}" aria-pressed="${fold(ui.tag) === fold(t.tag)}">${esc(t.tag)} <span>${t.n}</span></button>`).join('')}</nav>` : ''}
-        <div class="sortline"><span id="count">${countText(shown.length, all.length)}</span>
-          <label class="sort">Sort <select id="sort"><option value="az"${ui.sort === 'az' ? ' selected' : ''}>A to Z</option><option value="whose"${ui.sort === 'whose' ? ' selected' : ''}>By whose</option><option value="new"${ui.sort === 'new' ? ' selected' : ''}>Newest</option></select></label></div>
-      </div>
-      ${shown.length ? list : `<div class="paper none"><p>Nothing in the box matches${ui.q ? ` “${esc(ui.q)}”` : ''}${ui.tag ? ` under ${esc(ui.tag)}` : ''}.</p><button type="button" class="btn" data-act="clear">Show everything</button></div>`}
-      ${hasSamples ? '<p class="samples-note"><button type="button" class="linkish" data-act="unsample">Take out the sample recipes</button></p>' : ''}
-      ${footer()}
-    </div>`;
+  host.innerHTML = shown.length ? list : `<div class="paper none"><p>Nothing in the box matches${ui.q ? ` “${esc(ui.q)}”` : ''}${ui.tag ? ` under ${esc(ui.tag)}` : ''}.</p><button type="button" class="btn" data-act="clear">Show everything</button></div>`;
+  $('count').textContent = countText(shown.length, all.length);
   markPhotos();
-  on({
-    click: homeClick,
-    input(e) {
-      if (e.target.id !== 'q') return;
-      ui.q = e.target.value;
-      clearTimeout(home.t);
-      home.t = setTimeout(() => { const pos = e.target.selectionStart; home(); const q = $('q'); q.focus(); q.setSelectionRange(pos, pos); }, 120);
-    },
-    change(e) { if (e.target.id === 'sort') { ui.sort = e.target.value; home(); } },
-  });
 }
 
 const countText = (n, total) => (n === total ? plural(total, 'recipe') : `${n} of ${plural(total, 'recipe')}`);
@@ -394,6 +403,7 @@ function refresh() {
   const [head, a, b] = route.split('/');
   if (head === 'r' && a && !b) return rerenderRecipe(box.get(a));
   if (head === 'r' && b === 'cook') return;
+  if (!head && document.activeElement?.id === 'q') return drawList();
   if (!head || head === 'settings') router();
 }
 
