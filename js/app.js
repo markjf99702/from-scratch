@@ -70,7 +70,7 @@ function home() {
   app.innerHTML = `
     <div class="page">
       <div class="finder">
-        <label class="search">${icon.search}<span class="sr">Search</span><input type="search" id="q" value="${esc(ui.q)}" placeholder="Search recipes, people, ingredients" autocomplete="off" enterkeyhint="search"></label>
+        <label class="search">${icon.search}<span class="sr">Search</span><input type="search" id="q" value="${esc(ui.q)}" placeholder="Recipe, person or ingredient" autocomplete="off" enterkeyhint="search"></label>
         ${tags.length ? `<nav class="dividers" aria-label="Tags"><button type="button" class="tab" data-tag="" aria-pressed="${!ui.tag}">All <span>${all.length}</span></button>${tags.map(t => `<button type="button" class="tab" data-tag="${esc(t.tag)}" aria-pressed="${fold(ui.tag) === fold(t.tag)}">${esc(t.tag)} <span>${t.n}</span></button>`).join('')}</nav>` : ''}
         <div class="sortline"><span id="count"></span>
           <label class="sort">Sort <select id="sort"><option value="az"${ui.sort === 'az' ? ' selected' : ''}>A to Z</option><option value="whose"${ui.sort === 'whose' ? ' selected' : ''}>By whose</option><option value="new"${ui.sort === 'new' ? ' selected' : ''}>Newest</option></select></label></div>
