@@ -213,7 +213,7 @@ async function gotToken(r) {
 // The account's address, to show where recipes are saved and to skip Google's account chooser next time.
 async function whoami() {
   try {
-    const x = await api('GET', 'drive/v3/about?fields=' + encodeURIComponent('user(displayName,emailAddress)'));
+    const x = await api('GET', 'drive/v3/about?fields=' + encodeURIComponent('user(emailAddress)'));
     st.email = x?.user?.emailAddress || '';
     saveSt();
     if (tok && st.email) { tok.email = st.email; put(KT, tok); }
