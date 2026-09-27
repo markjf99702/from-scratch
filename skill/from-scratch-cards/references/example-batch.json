@@ -1,0 +1,61 @@
+{
+ "name": "Grandma Rosa's and Nana Bea's cards",
+ "recipes": [
+  {
+   "title": "Cinnamon Crumb Coffee Cake",
+   "from": "Grandma Rosa",
+   "cook": "35–40 min",
+   "ingredients": [
+    "1 1/2 cups flour",
+    "3/4 cup sugar",
+    "2 tsp baking powder",
+    "1/2 tsp salt",
+    "1/3 cup oleo, melted",
+    "1 egg",
+    "3/4 cup milk",
+    "1 tsp vanilla",
+    "For the topping:",
+    "1/2 cup brown sugar",
+    "1/3 cup flour",
+    "2 tsp cinnamon",
+    "3 tbsp cold butter",
+    "1/2 cup nuts"
+   ],
+   "steps": [
+    "Mix the dry ingredients.",
+    "Add the oleo, egg, milk and vanilla. Spread in a greased 8-inch square pan.",
+    "For the topping, cut the cold butter into the brown sugar, flour and cinnamon until crumbly, and add the nuts. Sprinkle the topping over.",
+    "Bake in a moderate oven (350°F) 35–40 minutes."
+   ],
+   "notes": "Oleo is margarine; melted butter works the same.",
+   "tags": ["Baking", "Breakfast"],
+   "source": "Index card in her handwriting"
+  },
+  {
+   "title": "Refrigerator Rolls",
+   "from": "Nana Bea",
+   "makes": "about 2 dozen",
+   "ingredients": [
+    "1 (1/4 oz) envelope active dry yeast",
+    "1 cup lukewarm water",
+    "1/2 cup shortening",
+    "1/3 cup sugar",
+    "1 egg",
+    "1 tsp salt",
+    "3 1/2–4 cups flour",
+    "Melted butter, for brushing"
+   ],
+   "steps": [
+    "Dissolve the yeast in the lukewarm water.",
+    "Cream the shortening and sugar, and beat in the egg and salt.",
+    "Add the yeast and enough flour to make a soft dough. Cover and keep in the icebox overnight.",
+    "Shape into rolls and set them in a greased pan. Let rise until double, about 1 hr.",
+    "Brush with melted butter and bake in a hot oven (400°F) 12–15 minutes."
+   ],
+   "notes": "Nana made the dough the night before Thanksgiving and baked the rolls while the turkey rested.",
+   "tags": ["Bread", "Holidays"],
+   "source": "Card in Nana Bea's handwriting",
+   "unsure": "The oven temperature is smudged; 400°F fits rolls like these."
+  }
+ ]
+}

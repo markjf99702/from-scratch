@@ -1,0 +1,15 @@
+{
+  "name": "from-scratch",
+  "private": true,
+  "type": "module",
+  "description": "The family recipe box: type up the cards, scale them, and cook from them.",
+  "scripts": {
+    "start": "npx --yes http-server -c-1 -p 8106 .",
+    "test": "node --test test/unit.test.mjs && node test/e2e.mjs",
+    "build": "node scripts/build.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "upng-js": "^2.1.0"
+  }
+}

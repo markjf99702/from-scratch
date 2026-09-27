@@ -1,0 +1,28 @@
+[
+ [
+  {"q":1.5,"u":"cup","item":"flour"},
+  {"q":0.75,"u":"cup","item":"sugar"},
+  {"q":2,"u":"tsp","item":"baking powder"},
+  {"q":0.5,"u":"tsp","item":"salt"},
+  {"q":0.3333333333333333,"u":"cup","item":"oleo","note":"melted"},
+  {"q":1,"item":"egg"},
+  {"q":0.75,"u":"cup","item":"milk"},
+  {"q":1,"u":"tsp","item":"vanilla"},
+  {"h":"For the topping"},
+  {"q":0.5,"u":"cup","item":"brown sugar"},
+  {"q":0.3333333333333333,"u":"cup","item":"flour"},
+  {"q":2,"u":"tsp","item":"cinnamon"},
+  {"q":3,"u":"tbsp","item":"cold butter"},
+  {"q":0.5,"u":"cup","item":"nuts"}
+ ],
+ [
+  {"q":1,"u":"envelope","size":{"q":0.25,"u":"oz"},"item":"active dry yeast"},
+  {"q":1,"u":"cup","item":"lukewarm water"},
+  {"q":0.5,"u":"cup","item":"shortening"},
+  {"q":0.3333333333333333,"u":"cup","item":"sugar"},
+  {"q":1,"item":"egg"},
+  {"q":1,"u":"tsp","item":"salt"},
+  {"q":3.5,"q2":4,"u":"cup","item":"flour"},
+  {"item":"Melted butter","note":"for brushing"}
+ ]
+]

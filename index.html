@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>From Scratch</title>
+  <meta name="description" content="The family recipe box. Keep the recipes that live on stained index cards and in people’s heads: photograph a card and Claude types it up, then scale it, switch between cups and grams, and cook from it with the screen kept on. It syncs through your own Google Drive, and a recipe can be sent to family as a link.">
+  <meta property="og:title" content="From Scratch">
+  <meta property="og:description" content="The family recipe box: type up the cards, scale them, and cook from them.">
+  <meta property="og:image" content="https://junkdrawer.works/from-scratch/og.png">
+  <meta property="og:url" content="https://junkdrawer.works/from-scratch/">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="theme-color" content="#2f6b63" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#16302c" media="(prefers-color-scheme: dark)">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon-180.png">
+  <link rel="preload" href="fonts/figtree.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/caveat.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/app.css">
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <header class="lid">
+    <div class="lid-in">
+      <a class="brand" href="#/" aria-label="From Scratch: the recipe box">
+        <span class="holder"><span class="label">From Scratch</span></span>
+      </a>
+      <div class="lid-actions">
+        <button type="button" class="lid-btn cloud" id="cloud" hidden></button>
+        <a class="lid-btn add" href="#/add"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Add</span></a>
+        <a class="lid-btn icon" href="#/settings" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></a>
+      </div>
+    </div>
+  </header>
+
+  <main id="app" tabindex="-1"></main>
+
+  <noscript><p class="noscript">From Scratch needs JavaScript to keep your recipe box.</p></noscript>
+
+  <div class="timers" id="timers" hidden></div>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <dialog class="sheet" id="sheet">
+    <div class="sheet-body"></div>
+  </dialog>
+
+  <div class="print-root" id="printRoot" aria-hidden="true"></div>
+</body>
+</html>
