@@ -331,7 +331,7 @@ button.tag { cursor: pointer; }
 .try { padding: 16px; border: 2px dashed var(--line-2); border-radius: 10px; }
 .try p { margin: 0 0 10px; color: var(--ink-2); }
 .foot { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin: 40px 0 0; color: var(--muted); font-size: 14px; }
-.foot a { color: var(--muted); }
+.foot a { color: var(--ink-2); }
 
 /* ---------- a recipe: one big index card ---------- */
 .recipe { padding: 20px 18px 22px; border-radius: 6px; }

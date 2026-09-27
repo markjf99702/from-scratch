@@ -167,7 +167,7 @@ function waysHTML() {
 }
 
 function footer() {
-  return `<footer class="foot"><a href="https://junkdrawer.works/privacy.html">Privacy</a><span aria-hidden="true">·</span><a href="https://github.com/markjf99702/from-scratch">Source</a><span aria-hidden="true">·</span><a href="https://junkdrawer.works/">junkdrawer.works</a></footer>`;
+  return `<footer class="foot"><a href="https://junkdrawer.works/">Part of junkdrawer.works</a><span aria-hidden="true">·</span><a href="https://junkdrawer.works/privacy.html">Privacy</a><span aria-hidden="true">·</span><a href="https://github.com/markjf99702/from-scratch">Source</a></footer>`;
 }
 
 // ---------- adding ----------
