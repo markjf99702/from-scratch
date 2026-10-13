@@ -578,7 +578,7 @@ body.cooking.has-timers .cook-body { padding-bottom: 120px; }
   .p-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0 .2in; border-bottom: 1.5pt solid #dd7a70; padding-bottom: 3pt; }
   .p-title { font: 650 15pt/1.1 var(--display); margin: 0; }
   .p-from { margin: 0; font-size: 7.5pt; text-transform: uppercase; letter-spacing: .06em; color: #6e6358; }
-  .p-from b { font: 700 15pt/1 var(--hand); color: #213f7c; text-transform: none; letter-spacing: 0; margin-left: 3pt; }
+  .p-from b { font: 700 15pt/1 var(--hand); color: #213f7c; text-transform: none; letter-spacing: 0; margin-left: 3pt; padding-right: .15em; } /* room for the handwriting's last stroke at the edge */
   .p-meta { margin: 2pt 0 0; font-size: 8pt; color: #51473e; line-height: 13pt; }
   .p-body { margin-top: 0; background: repeating-linear-gradient(to bottom, transparent 0, transparent 12.4pt, #bcd3e6 12.4pt, #bcd3e6 13pt); }
   .p-ings { list-style: none; margin: 0; padding: 0; }
