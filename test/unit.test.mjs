@@ -300,6 +300,29 @@ test('oven temperatures and pan sizes in the chosen units', () => {
   assert.ok(!stepHasAmounts('Bake 25 minutes.'));
 });
 
+test('an oven temperature range converts at both ends', () => {
+  const m = s => convertStep(s, 'metric').map(x => (x.was ? `[${x.text}]` : x.text)).join('');
+  const u = s => convertStep(s, 'us').map(x => (x.was ? `[${x.text}]` : x.text)).join('');
+  // The skill tells Claude to write old cards' ovens this way (references/old-cards.md, Ovens).
+  const want = {
+    'very slow oven (250–275°F)': 'very slow oven ([120–140°C])',
+    'slow oven (300–325°F)': 'slow oven ([150–160°C])',
+    'moderate oven (350°F)': 'moderate oven ([180°C])',
+    'quick oven (375–400°F)': 'quick oven ([190–200°C])',
+    'hot oven (400–450°F)': 'hot oven ([200–230°C])',
+    'very hot oven (450–500°F)': 'very hot oven ([230–260°C])',
+  };
+  const md = readFileSync(join(root, 'skill/from-scratch-cards/references/old-cards.md'), 'utf8').split('## Ovens')[1].split('\n## ')[0];
+  const rows = [...md.matchAll(/^\| [^|]+ \| `([^`]+)`/gm)].map(r => r[1]);
+  assert.ok(rows.length >= 6, 'the Ovens table is there');
+  for (const row of rows) assert.equal(m(row), want[row], `old-cards.md: ${row}`);
+  assert.equal(m('Bake in a slow oven (300–325°F) 1 hour.'), 'Bake in a slow oven ([150–160°C]) 1 hour.');
+  assert.equal(m('Heat the oven to 300 to 325 degrees F.'), 'Heat the oven to [150–160°C].');
+  assert.equal(m('Bake at 350-375 for 30 min.'), 'Bake at [180–190°C] for 30 min.');
+  assert.equal(u('Bake at 180-190°C.'), 'Bake at [350–375°F].');
+  assert.equal(convertStep('slow oven (300–325°F)', 'metric').find(x => x.was).was, '300–325°F', 'the card’s words for both ends');
+});
+
 test('each step lists the ingredients it uses', () => {
   const rosa = SAMPLES.find(r => r.id === 'sample-rosa-coffee-cake');
   const uses = stepIngredients(rosa.ingredients, rosa.steps).map(ix => ix.map(i => rosa.ingredients[i]));

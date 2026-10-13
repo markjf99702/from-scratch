@@ -90,8 +90,22 @@ export function clock(secs) {
 }
 
 // ---------- oven temperatures and pan sizes ----------
-const TEMP_RX = /\b(\d{3})\s*(?:°|º|˚|degrees?\b|deg\b)(?:\s*(F|C|fahrenheit|celsius|centigrade)\b)?/gi;
-const BARE_RX = /\b((?:bake|roast|oven|heat|preheat(?:ed)?(?: the)?(?: oven)?|set(?: the)?(?: oven)?)?\s*(?:at|to)\s+)(\d{3})\b(?!\s*(?:°|º|˚|degrees?|deg|g\b|grams?|ml|mm|cm|calories|kcal|watts?|w\b|%|x\b|×))/gi;
+const DEG = String.raw`(?:°|º|˚|degrees?\b|deg\b)`;
+const FC = String.raw`(?:\s*(F|C|fahrenheit|celsius|centigrade)\b)?`;
+const TEMP_RX = new RegExp(String.raw`\b(\d{3})\s*${DEG}${FC}`, 'gi');
+// A range is one temperature, so both ends convert: "slow oven (300–325°F)", "300°F to 325°F", "180-190°C".
+const TEMP_RANGE_RX = new RegExp(String.raw`\b(\d{3})(?:\s*${DEG}${FC})?\s*(?:-|–|—|to)\s*(\d{3})\s*${DEG}${FC}`, 'gi');
+const BARE_RX = /\b((?:bake|roast|oven|heat|preheat(?:ed)?(?: the)?(?: oven)?|set(?: the)?(?: oven)?)?\s*(?:at|to)\s+)(\d{3})(?:\s*(?:-|–|—|to)\s*(\d{3}))?\b(?!\s*(?:°|º|˚|degrees?|deg|g\b|grams?|ml|mm|cm|calories|kcal|watts?|w\b|%|x\b|×))/gi;
+const toC = f => Math.round(fToC(f) / 10) * 10;
+const toF = c => Math.round(cToF(c) / 25) * 25;
+
+// An oven temperature (or range) in the other system, or null if it's already in the one wanted.
+function tempHit(start, end, lo, hi, unit, mode, was) {
+  const conv = mode === 'metric' && unit === 'F' ? [toC, '°C'] : mode === 'us' && unit === 'C' ? [toF, '°F'] : null;
+  if (!conv) return null;
+  const a = conv[0](lo), b = hi == null ? null : conv[0](hi);
+  return { start, end, text: (b != null && b !== a ? `${a}–${b}` : `${a}`) + conv[1], was };
+}
 const INCH_RX = /(?<![\w½¼¾/.])((?:\d+\s*[½¼¾]|\d+(?:\s+\d\/\d)?|\d\/\d|[½¼¾])(?:\s*[x×]\s*(?:\d+\s*[½¼¾]|\d+(?:\s+\d\/\d)?|\d\/\d|[½¼¾]))*)\s*(?:-\s*|\s)?(?:inch(?:es)?\b|in\.(?=\s)|["”″])/gi;
 const CM_RX = /\b(\d+(?:[.,]\d+)?(?:\s*[x×]\s*\d+(?:[.,]\d+)?)*)\s*(?:-\s*|\s)?cm\b/gi;
 
@@ -100,24 +114,33 @@ const CM_RX = /\b(\d+(?:[.,]\d+)?(?:\s*[x×]\s*\d+(?:[.,]\d+)?)*)\s*(?:-\s*|\s)?
 export function convertStep(step, mode) {
   const text = String(step || '');
   if (mode !== 'metric' && mode !== 'us') return [{ text }];
-  const hits = [];
-  TEMP_RX.lastIndex = 0;
+  const hits = [], temps = [];
+  const taken = (start, end) => temps.some(h => start < h.end && h.start < end);
+  const unitOf = (letter, v) => (letter ? letter[0].toUpperCase() : v >= 250 ? 'F' : 'C');
   let m;
-  while ((m = TEMP_RX.exec(text))) {
-    const v = +m[1];
-    const unit = m[2] ? m[2][0].toUpperCase() : v >= 250 ? 'F' : 'C';
-    if (v < 100 || v > 600) continue;
-    if (mode === 'metric' && unit === 'F') hits.push({ start: m.index, end: m.index + m[0].length, text: `${Math.round(fToC(v) / 10) * 10}°C`, was: m[0].trim() });
-    if (mode === 'us' && unit === 'C') hits.push({ start: m.index, end: m.index + m[0].length, text: `${Math.round(cToF(v) / 25) * 25}°F`, was: m[0].trim() });
+  TEMP_RANGE_RX.lastIndex = 0;
+  while ((m = TEMP_RANGE_RX.exec(text))) {
+    const lo = +m[1], hi = +m[3];
+    if (lo < 100 || hi > 600 || !(hi > lo) || (m[2] && m[4] && m[2][0].toUpperCase() !== m[4][0].toUpperCase())) continue;
+    temps.push({ start: m.index, end: m.index + m[0].length, lo, hi, unit: unitOf(m[4] || m[2], lo), was: m[0].trim() });
   }
-  // "Bake at 350 for 30 min": an oven temperature with no degree sign.
+  TEMP_RX.lastIndex = 0;
+  while ((m = TEMP_RX.exec(text))) {
+    const v = +m[1], start = m.index, end = m.index + m[0].length;
+    if (v < 100 || v > 600 || taken(start, end)) continue;
+    temps.push({ start, end, lo: v, hi: null, unit: unitOf(m[2], v), was: m[0].trim() });
+  }
+  // "Bake at 350 for 30 min", "at 350–375": an oven temperature with no degree sign.
   BARE_RX.lastIndex = 0;
   while ((m = BARE_RX.exec(text))) {
-    const v = +m[2], start = m.index + m[1].length;
-    if (v < 200 || v > 550 || hits.some(h => h.start <= start && start < h.end)) continue;
-    const unit = v >= 250 ? 'F' : 'C';
-    if (mode === 'metric' && unit === 'F') hits.push({ start, end: start + m[2].length, text: `${Math.round(fToC(v) / 10) * 10}°C`, was: `${v}°F` });
-    if (mode === 'us' && unit === 'C') hits.push({ start, end: start + m[2].length, text: `${Math.round(cToF(v) / 25) * 25}°F`, was: `${v}°C` });
+    const lo = +m[2], hi = m[3] ? +m[3] : null, start = m.index + m[1].length, end = m.index + m[0].length;
+    if (lo < 200 || (hi ?? lo) > 550 || (hi != null && !(hi > lo)) || taken(start, end)) continue;
+    const unit = lo >= 250 ? 'F' : 'C';
+    temps.push({ start, end, lo, hi, unit, was: `${text.slice(start, end)}°${unit}` });
+  }
+  for (const t of temps) {
+    const h = tempHit(t.start, t.end, t.lo, t.hi, t.unit, mode, t.was);
+    if (h) hits.push(h);
   }
   if (mode === 'metric') {
     INCH_RX.lastIndex = 0;
