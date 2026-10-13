@@ -6,7 +6,7 @@ import { allTags, today } from './recipe.js';
 import { parseLine, present, amountWords } from './ingredients.js';
 import { splitRecipe, findTimes } from './text.js';
 import { linkData } from './share.js';
-import { app, $, esc, on, go, toast, icon, amountHTML } from './ui.js';
+import { app, $, esc, on, go, toast, icon, amountHTML, footer } from './ui.js';
 
 const DRAFT = 'fromscratch.draft';
 const FIELDS = ['title', 'from', 'serves', 'makes', 'prep', 'cook', 'ingredients', 'steps', 'notes', 'tags', 'source', 'check'];
@@ -62,6 +62,7 @@ export function editPage(r) {
         ${v.check ? `<label class="field"><span class="lbl">To check against the card</span><textarea name="check" rows="2">${esc(v.check)}</textarea><small>Empty this once it’s right.</small></label>` : ''}
         <div class="row form-actions"><button type="submit" class="btn primary big">Save recipe</button><a class="btn quiet" href="${back}" data-act="cancel">Cancel</a></div>
       </form>
+      ${footer()}
     </div>`;
   drawPhoto(r);
   preview();
@@ -172,6 +173,7 @@ export function pastePage() {
         <label class="field"><span class="lbl">The recipe</span><textarea id="pasteText" rows="14" placeholder="Aunt June’s Molasses Crinkles&#10;2 c. flour&#10;2 t. soda&#10;…&#10;Cream shortening and sugar. Add egg and molasses."></textarea></label>
         <div class="row"><button type="button" class="btn primary" data-act="split">Sort it out</button></div>
       </div>
+      ${footer()}
     </div>`;
   on({
     click(e) {

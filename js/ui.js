@@ -80,6 +80,11 @@ export function download(name, text, type = 'application/json') {
 
 export const plural = (n, one, many = one + 's') => `${n} ${n === 1 ? one : many}`;
 
+// The line back to the drawer, at the foot of every screen but cook mode (and never in print).
+export function footer() {
+  return `<footer class="foot"><a href="https://junkdrawer.works/">Part of junkdrawer.works</a><span aria-hidden="true">·</span><a href="https://junkdrawer.works/privacy.html">Privacy</a><span aria-hidden="true">·</span><a href="https://github.com/markjf99702/from-scratch">Source</a></footer>`;
+}
+
 // Kitchen fractions are drawn from the font's own digits with its fraction feature, so ⅓ and ⅛ match ½.
 const FR = { '⅛': '1⁄8', '¼': '1⁄4', '⅓': '1⁄3', '⅜': '3⁄8', '½': '1⁄2', '⅝': '5⁄8', '⅔': '2⁄3', '¾': '3⁄4', '⅞': '7⁄8', '⅙': '1⁄6', '⅚': '5⁄6', '⅕': '1⁄5' };
 export function amountHTML(s) {

@@ -7,7 +7,7 @@ import { sections, readNumber, normalize, kitchen, lineText, present } from './i
 import { UNITS } from './units.js';
 import { stepHasAmounts, findTimes, formatDuration } from './text.js';
 import { recipeLink } from './share.js';
-import { app, $, esc, ui, on, go, toast, sheet, icon, copy } from './ui.js';
+import { app, $, esc, ui, on, go, toast, sheet, icon, copy, footer } from './ui.js';
 import { ingredientsHTML, sourcesNote, stepHTML, factorLabel, factorWords, UNIT_MODES, presentLines, metaHTML } from './view.js';
 import { timers } from './timers.js';
 import { printRecipe } from './print.js';
@@ -85,6 +85,7 @@ function draw(r) {
         <a class="act" href="#/r/${esc(r.id)}/edit">${icon.edit}<span>Edit</span></a>
         <button type="button" class="act" data-act="remove">${icon.trash}<span>Remove</span></button>
       </div>
+      ${footer()}
     </div>`;
   showPhoto(r);
   on({ click: e => click(e, r) });

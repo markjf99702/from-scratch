@@ -4,7 +4,7 @@ import { photos, blobToDataURL, dataURLToBlob } from './photos.js';
 import { allTags, hasTag, matches, possessive, fold, today, canon } from './recipe.js';
 import { readIncoming, linkData, forLink } from './share.js';
 import { SAMPLES, SAMPLE_PHOTOS } from './samples.js';
-import { app, $, esc, ui, on, go, toast, sheet, closeSheet, sheetOpen, icon, plural, canDownload, download } from './ui.js';
+import { app, $, esc, ui, on, go, toast, sheet, closeSheet, sheetOpen, icon, plural, canDownload, download, footer } from './ui.js';
 import { recipePage, rerenderRecipe } from './recipe-page.js';
 import { cookPage, leaveCook } from './cook.js';
 import { editPage, pastePage, editing } from './edit.js';
@@ -39,7 +39,7 @@ function router() {
 
 export function message(title, text) {
   document.title = 'From Scratch';
-  app.innerHTML = `<div class="page narrow"><div class="paper empty-msg"><h1>${esc(title)}</h1><p>${esc(text)}</p><a class="btn" href="#/">Back to the recipe box</a></div></div>`;
+  app.innerHTML = `<div class="page narrow"><div class="paper empty-msg"><h1>${esc(title)}</h1><p>${esc(text)}</p><a class="btn" href="#/">Back to the recipe box</a></div>${footer()}</div>`;
   on({});
 }
 
@@ -168,10 +168,6 @@ function waysHTML() {
     <a class="way" href="#/paste"><span class="way-icon">${icon.plus}</span><b>Paste it</b><span>From an email, a website or your notes. The ingredients and steps are sorted out for you.</span></a>`;
 }
 
-function footer() {
-  return `<footer class="foot"><a href="https://junkdrawer.works/">Part of junkdrawer.works</a><span aria-hidden="true">·</span><a href="https://junkdrawer.works/privacy.html">Privacy</a><span aria-hidden="true">·</span><a href="https://github.com/markjf99702/from-scratch">Source</a></footer>`;
-}
-
 // ---------- adding ----------
 const SKILL_URL = 'https://github.com/markjf99702/from-scratch/tree/main/skill/from-scratch-cards';
 
@@ -196,6 +192,7 @@ function addPage() {
         <a class="way" href="#/new"><span class="way-icon">${icon.edit}</span><b>Type it in</b><span>Copy it from the card yourself, and keep a photo of the card with it.</span></a>
         <a class="way" href="#/paste"><span class="way-icon">${icon.plus}</span><b>Paste it</b><span>From an email, a website or your notes. The ingredients and steps are sorted out for you.</span></a>
       </div>
+      ${footer()}
     </div>`;
   on({
     async click(e) {
@@ -263,6 +260,7 @@ function showIncoming(got) {
             ${x.r.notes ? `<div class="note-card hand">${esc(x.r.notes).replace(/\n/g, '<br>')}</div>` : ''}
           </article>`).join('')}
         <div class="bar-bottom"><button type="button" class="btn primary big" data-act="add"${fresh ? '' : ' disabled'}>${fresh ? (fresh === 1 ? 'Add it to my recipe box' : `Add ${fresh} recipes to my box`) : 'Nothing new to add'}</button>${fresh ? '' : '<a class="btn quiet" href="#/">Go to the recipe box</a>'}</div>
+        ${footer()}
       </div>`;
   };
   draw();

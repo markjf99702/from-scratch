@@ -89,6 +89,13 @@ assert.equal(await page.locator('.card').count(), 5, 'five sample recipes');
 await page.locator('.card[data-id="sample-rosa-coffee-cake"] .clip:not([hidden])').waitFor({ timeout: 5000 });
 await fits(page, 'the box');
 
+// The line back to junkdrawer.works is at the foot of every screen.
+for (const hash of ['#/', '#/r/sample-walt-chili', '#/add', '#/new', '#/paste', '#/settings', '#/r/not-here']) {
+  await page.goto(base + hash);
+  assert.equal(await page.locator('main footer.foot').count(), 1, `the footer on ${hash}`);
+}
+await page.goto(base + '#/');
+
 // Search and tags.
 const searchBox = await page.$('#q');
 await page.click('#q');
@@ -220,6 +227,7 @@ await page.locator('.cook').waitFor();
 assert.equal(await page.evaluate(() => window.__wake), 1, 'asks to keep the screen on');
 assert.match(await page.locator('#wakeNote').innerText(), /screen stays on/);
 assert.equal(await page.locator('.lid').isVisible(), false);
+assert.equal(await page.locator('footer.foot').count(), 0, 'no footer in cook mode');
 assert.match(await page.locator('.cook-step').innerText(), /Get everything out/);
 await page.click('[data-go="1"]');
 assert.match(await page.locator('.cook-kicker').innerText(), /Step 1 of 6/i);
@@ -335,6 +343,7 @@ assert.match(await page.locator('.page-title').innerText(), /2 recipes for your 
 assert.match(await text(page), /1 recipe to check against the card/);
 assert.match(await page.locator('.review').nth(1).innerText(), /Check against the card: The oven temperature is smudged/);
 await fits(page, 'recipes from Claude');
+assert.equal(await page.locator('main footer.foot').count(), 1, 'the footer under recipes from Claude');
 await startTimer(page);
 assert.ok(await uncovered(page, '[data-act="add"]'), 'a running timer doesn’t cover the Add button');
 await stopTimers(page);
