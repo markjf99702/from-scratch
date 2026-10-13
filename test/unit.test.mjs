@@ -3,6 +3,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
+import vm from 'node:vm';
 import { readFileSync, mkdtempSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
@@ -585,4 +586,21 @@ test('the offline copy lists every file the page uses', () => {
   ];
   for (const f of want) assert.ok(shell.includes(f), `sw.js is missing ${f}`);
   for (const f of shell) if (f !== './') assert.ok(want.includes(f), `sw.js lists ${f}, which isn't there`);
+});
+
+// Every tool at junkdrawer.works/REPO/ shares one Cache Storage: a new version must clear only its own old copies.
+test('the offline copy clears only its own old caches', async () => {
+  const src = readFileSync(join(root, 'sw.js'), 'utf8');
+  const current = /const CACHE = '([^']+)'/.exec(src)[1];
+  const stored = new Set(['from-scratch-v0', 'other-tool-v1', 'every-so-often-v3', 'from-scratch', current]);
+  const on = {};
+  vm.runInNewContext(src, {
+    self: { addEventListener: (type, fn) => { on[type] = fn; }, clients: { claim: async () => {} }, skipWaiting: async () => {} },
+    caches: { keys: async () => [...stored], delete: async k => stored.delete(k) },
+    location: { origin: 'https://junkdrawer.works' },
+  });
+  let done;
+  on.activate({ waitUntil: p => { done = p; } });
+  await done;
+  assert.deepEqual([...stored].sort(), ['every-so-often-v3', 'from-scratch', current, 'other-tool-v1'].sort(), 'only from-scratch-v0 goes');
 });

@@ -2,7 +2,7 @@
 // Recipes live in localStorage and photos of cards in IndexedDB, not here.
 // Network first, so a new version shows up as soon as you're online.
 
-const CACHE = 'from-scratch-v1'; // bump the number when the file list changes
+const CACHE = 'from-scratch-v2'; // bump the number when the file list changes
 const SHELL = [
   './', 'index.html', 'icon.svg', 'manifest.webmanifest',
   'icon-180.png', 'icon-192.png', 'icon-512.png', 'icon-512-maskable.png',
@@ -17,9 +17,10 @@ self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
 });
 
+// Every tool at junkdrawer.works/REPO/ shares this origin's Cache Storage, so only this project's old copies go.
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys()
-    .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+    .then(keys => Promise.all(keys.filter(k => k.startsWith('from-scratch-') && k !== CACHE).map(k => caches.delete(k))))
     .then(() => self.clients.claim()));
 });
 
