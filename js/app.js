@@ -365,9 +365,11 @@ async function restoreBackup(got) {
   if (!changed) return; // storage full, and the store has said so
   let pics = 0;
   for (const [id, url] of Object.entries(got.photos || {})) {
-    if (await photos.get(id)) continue;
-    const blob = dataURLToBlob(url);
-    if (blob) { await photos.set(id, blob); pics++; }
+    try {
+      if (await photos.get(id)) continue;
+      const blob = dataURLToBlob(url);
+      if (blob) { await photos.set(id, blob); pics++; }
+    } catch { /* a photo this browser won't keep: the rest still come in */ }
   }
   go('/', true);
   router();

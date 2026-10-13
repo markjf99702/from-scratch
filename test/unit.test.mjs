@@ -13,6 +13,7 @@ import { densityFor, DENSITIES } from '../js/density.js';
 import { findTimes, convertStep, stepIngredients, splitRecipe, stepHasAmounts, clock, formatRange } from '../js/text.js';
 import { cleanRecipe, cleanBox, mergeBoxes, canon, live, matches, possessive, yieldOf, yieldText, fingerprint } from '../js/recipe.js';
 import { pack, unpack, readIncoming, forLink, LINK_RX } from '../js/share.js';
+import { dataURLToBlob } from '../js/photos.js';
 import { SAMPLES } from '../js/samples.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -629,6 +630,14 @@ test('loading a backup counts the recipes it brings, not its removal markers', a
   } finally {
     delete globalThis.localStorage;
   }
+});
+
+test('a backup’s photo that isn’t readable is skipped, not fatal', async () => {
+  assert.equal(dataURLToBlob('data:image/jpeg;base64,@@@notbase64@@@'), null);
+  assert.equal(dataURLToBlob('not a photo'), null);
+  const ok = dataURLToBlob('data:image/png;base64,' + Buffer.from('hello').toString('base64'));
+  assert.equal(ok.type, 'image/png');
+  assert.equal(await ok.text(), 'hello');
 });
 
 // ---------- links ----------

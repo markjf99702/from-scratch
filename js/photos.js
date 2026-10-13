@@ -73,10 +73,13 @@ export const blobToDataURL = blob => new Promise((resolve, reject) => {
   r.readAsDataURL(blob);
 });
 
+// A photo from a backup file, or null if it isn't one this browser can read.
 export function dataURLToBlob(url) {
   const m = /^data:([^;,]+)?(;base64)?,(.*)$/s.exec(String(url || ''));
   if (!m || !m[2]) return null;
-  const bin = atob(m[3]), bytes = new Uint8Array(bin.length);
+  let bin;
+  try { bin = atob(m[3]); } catch { return null; }
+  const bytes = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
   return new Blob([bytes], { type: m[1] || 'image/jpeg' });
 }

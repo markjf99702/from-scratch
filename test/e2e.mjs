@@ -448,9 +448,14 @@ assert.ok(saved.photos['sample-rosa-coffee-cake'].startsWith('data:image/jpeg;ba
 await page.click('[data-act="erase"]');
 await page.click('[data-a="yes"]');
 await page.locator('text=Your recipe box is empty').waitFor();
-// A backup also carries markers for removed recipes; they aren't counted as recipes.
+// A backup also carries markers for removed recipes, which aren't counted as recipes, and here a photo that isn't
+// readable, which is skipped.
 const marked = join(OUT, 'backup-with-removals.json');
-await writeFile(marked, JSON.stringify({ ...saved, box: { recipes: { ...saved.box.recipes, 'r-gone1': { id: 'r-gone1', t: 5, del: 1 }, 'r-gone2': { id: 'r-gone2', t: 5, del: 1 }, 'r-gone3': { id: 'r-gone3', t: 5, del: 1 } } } }));
+await writeFile(marked, JSON.stringify({
+  ...saved,
+  box: { recipes: { ...saved.box.recipes, 'r-gone1': { id: 'r-gone1', t: 5, del: 1 }, 'r-gone2': { id: 'r-gone2', t: 5, del: 1 }, 'r-gone3': { id: 'r-gone3', t: 5, del: 1 } } },
+  photos: { 'r-smudged': 'data:image/jpeg;base64,@@@notbase64@@@', ...saved.photos },
+}));
 await page.goto(base + '#/settings');
 await page.setInputFiles('#restoreIn', marked);
 await page.locator('.card').first().waitFor();
