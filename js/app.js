@@ -362,7 +362,7 @@ async function saveBackup(withPhotos) {
 
 async function restoreBackup(got) {
   const changed = box.merge(got.box, 'local');
-  if (changed == null) return; // storage full, and the store has said so
+  if (!changed) return; // storage full, and the store has said so
   let pics = 0;
   for (const [id, url] of Object.entries(got.photos || {})) {
     if (await photos.get(id)) continue;
@@ -371,7 +371,8 @@ async function restoreBackup(got) {
   }
   go('/', true);
   router();
-  toast(changed || pics ? `Loaded the backup: ${plural(changed, 'recipe')} new or updated${pics ? `, ${plural(pics, 'photo')}` : ''}` : 'Nothing new in that backup');
+  const news = [changed.added && `${plural(changed.added, 'recipe')} new or updated`, changed.removed && `${plural(changed.removed, 'recipe')} taken out`, pics && plural(pics, 'photo')].filter(Boolean);
+  toast(news.length ? `Loaded the backup: ${news.join(', ')}` : 'Nothing new in that backup');
 }
 
 function eraseAll() {

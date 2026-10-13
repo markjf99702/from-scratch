@@ -567,27 +567,32 @@ test('a box cleans every recipe and keeps the newest of duplicates', () => {
   assert.equal(b.recipes.a.title, 'Three');
 });
 
-// localStorage is shared by every tool at junkdrawer.works/REPO/, so it can fill up. A change that can't be saved
-// must not look saved: the box stays as it was, and the page hears 'full' to say so.
-test('a change that can’t be saved leaves the box as it was', async () => {
+// A stand-in for the browser's localStorage, with room for so many characters.
+function fakeStorage() {
   const data = new Map();
-  let room = Infinity;
-  globalThis.localStorage = {
+  return {
+    room: Infinity, data,
     getItem: k => (data.has(k) ? data.get(k) : null),
     setItem(k, v) {
       const others = [...data].reduce((n, [key, val]) => n + (key === k ? 0 : key.length + val.length), 0);
-      if (others + k.length + String(v).length > room) throw Object.assign(new Error('full'), { name: 'QuotaExceededError' });
+      if (others + k.length + String(v).length > this.room) throw Object.assign(new Error('full'), { name: 'QuotaExceededError' });
       data.set(k, String(v));
     },
     removeItem: k => data.delete(k),
   };
+}
+
+// localStorage is shared by every tool at junkdrawer.works/REPO/, so it can fill up. A change that can't be saved
+// must not look saved: the box stays as it was, and the page hears 'full' to say so.
+test('a change that can’t be saved leaves the box as it was', async () => {
+  const ls = globalThis.localStorage = fakeStorage(), data = ls.data;
   try {
     const { box, KEY } = await import('../js/store.js');
     const heard = [];
     box.onChange(why => heard.push(why));
     const pie = box.put({ id: 'r-pie', title: 'Apple Pie', ingredients: ['6 apples'] });
     assert.ok(pie && !box.full);
-    room = 0; // nothing more fits
+    ls.room = 0; // nothing more fits
     const seq = box.seq, before = canon(box.state);
     assert.equal(box.put({ id: 'r-crisp', title: 'Aunt Ruth’s Rhubarb Crisp' }), null, 'not saved, so not returned');
     assert.ok(box.full);
@@ -602,10 +607,25 @@ test('a change that can’t be saved leaves the box as it was', async () => {
     assert.equal(canon(box.state), before, 'the box is as it was');
     assert.equal(box.seq, seq);
     assert.equal(canon(JSON.parse(data.get(KEY))), before, 'and so is what a reload reads');
-    room = Infinity;
+    ls.room = Infinity;
     assert.ok(box.put({ id: 'r-crisp', title: 'Aunt Ruth’s Rhubarb Crisp' }));
     assert.ok(!box.full);
     assert.ok(heard.includes('local'));
+  } finally {
+    delete globalThis.localStorage;
+  }
+});
+
+test('loading a backup counts the recipes it brings, not its removal markers', async () => {
+  globalThis.localStorage = fakeStorage();
+  try {
+    const { box } = await import('../js/store.js');
+    const backup = { recipes: { 'b-plum': { id: 'b-plum', t: 5, title: 'Plum Cake' }, 'b-gone1': { id: 'b-gone1', t: 5, del: 1 }, 'b-gone2': { id: 'b-gone2', t: 5, del: 1 }, 'b-gone3': { id: 'b-gone3', t: 5, del: 1 } } };
+    assert.deepEqual(box.merge(backup), { added: 1, removed: 0 }, 'one recipe, not four');
+    assert.deepEqual(box.merge(backup), { added: 0, removed: 0 }, 'nothing new the second time');
+    box.put({ id: 'b-soup', title: 'Bean Soup' });
+    assert.deepEqual(box.merge({ recipes: { 'b-soup': { id: 'b-soup', t: Date.now() + 60000, del: 1 } } }), { added: 0, removed: 1 }, 'a newer removal takes one out');
+    assert.equal(box.get('b-soup'), null);
   } finally {
     delete globalThis.localStorage;
   }

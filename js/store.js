@@ -74,18 +74,22 @@ export const box = {
     if (added.some(Boolean)) emit('local');
     return added.filter(Boolean);
   },
-  // Merges another box in (a backup, or the Drive copy). Returns the number of recipes that changed here,
-  // or null if they couldn't be saved.
+  // Merges another box in (a backup). Returns what someone would notice, { added, removed }: recipes new or
+  // changed here, and recipes here that a newer removal took out (not the markers themselves), or null if it
+  // couldn't be saved.
   merge(other, why = 'merge') {
     full = false;
-    const merged = mergeBoxes(state, other);
-    const changed = Object.keys(merged.recipes).filter(id => canon(merged.recipes[id]) !== canon(state.recipes[id])).length;
-    if (changed) {
+    const before = state, merged = mergeBoxes(state, other);
+    const ids = Object.keys(merged.recipes).filter(id => canon(merged.recipes[id]) !== canon(before.recipes[id]));
+    if (ids.length) {
       if (!commit(merged)) return null;
       seq++;
       emit(why);
     }
-    return changed;
+    return {
+      added: ids.filter(id => !merged.recipes[id].del).length,
+      removed: ids.filter(id => merged.recipes[id].del && !merged.recipes[id].to && before.recipes[id] && !before.recipes[id].del).length,
+    };
   },
   // Replaces the box with one that already includes everything here (after a sync). False if it couldn't be
   // saved; the sync says so itself.

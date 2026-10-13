@@ -448,10 +448,14 @@ assert.ok(saved.photos['sample-rosa-coffee-cake'].startsWith('data:image/jpeg;ba
 await page.click('[data-act="erase"]');
 await page.click('[data-a="yes"]');
 await page.locator('text=Your recipe box is empty').waitFor();
+// A backup also carries markers for removed recipes; they aren't counted as recipes.
+const marked = join(OUT, 'backup-with-removals.json');
+await writeFile(marked, JSON.stringify({ ...saved, box: { recipes: { ...saved.box.recipes, 'r-gone1': { id: 'r-gone1', t: 5, del: 1 }, 'r-gone2': { id: 'r-gone2', t: 5, del: 1 }, 'r-gone3': { id: 'r-gone3', t: 5, del: 1 } } } }));
 await page.goto(base + '#/settings');
-await page.setInputFiles('#restoreIn', backupPath);
+await page.setInputFiles('#restoreIn', marked);
 await page.locator('.card').first().waitFor();
 assert.equal(await page.locator('.card').count(), 9, 'the backup brings everything back');
+assert.equal(await page.locator('#toast').innerText(), 'Loaded the backup: 9 recipes new or updated, 2 photos');
 await page.locator('.card[data-id="sample-rosa-coffee-cake"] .clip:not([hidden])').waitFor({ timeout: 5000 });
 
 // Survives a reload, and works offline once it has been opened.
