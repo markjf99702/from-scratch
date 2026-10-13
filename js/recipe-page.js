@@ -48,7 +48,7 @@ function draw(r) {
     <div class="page recipe-page">
       <nav class="crumbs"><a href="#/">${icon.back}Recipe box</a></nav>
       <article class="paper recipe" id="recipe">
-        ${r.check ? `<div class="check">${icon.flag}<div><b>Check this against the card.</b> ${esc(r.check)}</div><button type="button" class="btn small" data-act="checked">It’s right</button></div>` : ''}
+        ${r.check ? `<div class="check">${icon.flag}<div><b>Check this against the card:</b> ${esc(r.check)}</div><button type="button" class="btn small" data-act="checked">It’s right</button></div>` : ''}
         <header class="rhead">
           ${r.from ? `<p class="kitchen">From the kitchen of <span class="hand">${esc(r.from)}</span></p>` : ''}
           <h1 class="rtitle">${esc(r.title)}</h1>

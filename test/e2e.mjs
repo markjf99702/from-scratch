@@ -381,6 +381,7 @@ assert.equal(await page.locator('.card').count(), 9);
 assert.equal(await page.locator('.card .flag').count(), 1, 'the one to check is flagged in the box');
 await page.click('.card:has-text("Refrigerator Rolls")');
 await page.locator('.recipe .check').waitFor();
+assert.match(await page.locator('.recipe .check').innerText(), /Check this against the card: The oven temperature is smudged/, 'the note reads on from the flag');
 await page.click('[data-act="checked"]');
 assert.equal(await page.locator('.recipe .check').count(), 0);
 assert.match(await page.locator('.steps').innerText(), /about 1 hr/);
