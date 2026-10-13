@@ -64,6 +64,10 @@ async function device({ watch = true, sw = true } = {}) {
 
 const fits = async (page, where) => assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `${where} scrolls sideways on a phone`);
 const text = page => page.locator('main').innerText();
+// Nothing sits on top of it: the middle of the element is the element itself.
+const uncovered = (page, sel) => page.locator(sel).evaluate(el => { const r = el.getBoundingClientRect(); const hit = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2); return !!hit && el.contains(hit); });
+const startTimer = page => page.evaluate(() => window.fromScratch.timers.start({ secs: 600, label: 'Rise', title: 'Rolls', recipe: 'x', step: 9 }));
+const stopTimers = page => page.evaluate(() => window.fromScratch.timers.all().forEach(t => window.fromScratch.timers.cancel(t.id)));
 const ingredient = (page, i) => page.locator(`.ing[data-i="${i}"]`).innerText().then(t => t.replace(/\s+/g, ' ').trim());
 
 // ---------- Mark's recipe box ----------
@@ -230,6 +234,9 @@ await page.click('[data-idea="Holidays"]');
 await page.setInputFiles('#photoIn', join(root, 'samples/rosa-card.jpg'));
 await page.locator('.edit-photo img').waitFor();
 await fits(page, 'the form');
+await startTimer(page);
+assert.ok(await uncovered(page, 'button[type="submit"]'), 'a running timer doesn’t cover Save recipe');
+await stopTimers(page);
 await page.click('button[type="submit"]');
 await page.locator('.rtitle:has-text("Peanut Butter Fudge")').waitFor();
 assert.match(await page.locator('.kitchen').innerText(), /Great-Aunt Dot/);
@@ -285,6 +292,9 @@ assert.match(await page.locator('.page-title').innerText(), /2 recipes for your 
 assert.match(await text(page), /1 recipe to check against the card/);
 assert.match(await page.locator('.review').nth(1).innerText(), /Check against the card: The oven temperature is smudged/);
 await fits(page, 'recipes from Claude');
+await startTimer(page);
+assert.ok(await uncovered(page, '[data-act="add"]'), 'a running timer doesn’t cover the Add button');
+await stopTimers(page);
 await page.click('[data-act="add"]');
 await page.locator('.card').first().waitFor();
 assert.equal(await page.locator('.card').count(), 9);

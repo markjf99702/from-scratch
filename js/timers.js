@@ -109,6 +109,13 @@ function flash(id) {
   el.classList.add('flash');
 }
 
+// The timer bar's height (each running timer adds a row), so the bars that stick to the bottom of the page and
+// cook mode's note can sit clear of it.
+function measure() {
+  const host = $('timers');
+  if (host) document.body.style.setProperty('--timers-h', `${host.hidden ? 0 : host.offsetHeight}px`);
+}
+
 export function render() {
   const host = $('timers');
   if (!host) return;
@@ -129,11 +136,13 @@ export function render() {
       <div class="t-btns"><button type="button" class="t-btn icon" data-t="${t.paused ? 'resume' : 'pause'}" data-id="${t.id}" aria-label="${t.paused ? 'Resume' : 'Pause'} ${esc(t.label)}">${t.paused ? icon.play : icon.pause}</button><button type="button" class="t-btn icon" data-t="cancel" data-id="${t.id}" aria-label="Cancel ${esc(t.label)}">${icon.x}</button></div>
     </div>`;
   }).join('');
+  measure();
   if (list.length && !tickT) tickT = setInterval(tick, 250);
 }
 
 export function initTimers() {
   const host = $('timers');
+  if (typeof ResizeObserver === 'function') new ResizeObserver(measure).observe(host);
   host.addEventListener('click', e => {
     const b = e.target.closest('[data-t]');
     if (!b) return;

@@ -524,7 +524,10 @@ body.has-timers .toast { top: calc(12px + env(safe-area-inset-top)); bottom: aut
 .timer.flash { animation: flash .6s ease 2; }
 @keyframes ring { 0%, 100% { transform: none; } 10%, 30% { transform: rotate(-1.2deg); } 20%, 40% { transform: rotate(1.2deg); } 50% { transform: none; } }
 @keyframes flash { 50% { filter: brightness(1.6); } }
-body.has-timers .page { padding-bottom: 200px; }
+/* The bars that stick to the bottom of the page sit above the running timers, however many there are. */
+body.has-timers .page { padding-bottom: max(120px, calc(var(--timers-h, 64px) + 60px + env(safe-area-inset-bottom))); }
+body.has-timers .bar-bottom { bottom: calc(var(--timers-h, 64px) + 10px); }
+body.has-timers .form-actions { bottom: calc(var(--timers-h, 64px) + 18px + env(safe-area-inset-bottom)); }
 
 /* ---------- cook mode ---------- */
 body.cooking .lid { display: none; }
