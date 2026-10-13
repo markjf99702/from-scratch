@@ -261,6 +261,30 @@ test('times in steps become timers', () => {
   assert.equal(clock(3725), '1:02:05');
 });
 
+test('times written with fractions and words are read whole', () => {
+  const t = s => findTimes(s).map(x => [x.text, x.secs, x.secs2]);
+  assert.deepEqual(t('Let it rest 1/2 hour before slicing.'), [['1/2 hour', 1800, null]], 'not 2 hours from the digit after the slash');
+  assert.deepEqual(t('Let rise 1/2 hour'), [['1/2 hour', 1800, null]]);
+  assert.deepEqual(t('Bake the rolls 3/4 hour.'), [['3/4 hour', 2700, null]]);
+  assert.deepEqual(t('Cook 1/4 hour'), [['1/4 hour', 900, null]]);
+  assert.deepEqual(t('Let rest ½ hour.'), [['½ hour', 1800, null]]);
+  assert.deepEqual(t('Bake 1-1/2 hours'), [['1-1/2 hours', 5400, null]], '1-1/2 is one and a half, not a range');
+  assert.deepEqual(t('Simmer 2-1/2 hours'), [['2-1/2 hours', 9000, null]]);
+  assert.deepEqual(t('Bake 1-1/4 hours'), [['1-1/4 hours', 4500, null]]);
+  assert.deepEqual(t('Bake 1 1/2 hours'), [['1 1/2 hours', 5400, null]]);
+  assert.deepEqual(t('Bake 1 and 1/2 hours'), [['1 and 1/2 hours', 5400, null]]);
+  assert.deepEqual(t('Bake one and a half hours'), [['one and a half hours', 5400, null]]);
+  assert.deepEqual(t('Bake an hour and a half'), [['an hour and a half', 5400, null]]);
+  assert.deepEqual(t('Bake 1-1/2 to 2 hours'), [['1-1/2 to 2 hours', 5400, 7200]]);
+  // Ranges still read as ranges.
+  assert.deepEqual(t('Bake 25–30 minutes'), [['25–30 minutes', 1500, 1800]]);
+  assert.deepEqual(t('Bake 1-2 hours'), [['1-2 hours', 3600, 7200]]);
+  assert.deepEqual(t('Bake 1/2-1 hour'), [['1/2-1 hour', 1800, 3600]]);
+  assert.deepEqual(t('Bake 1 1/2-2 hours'), [['1 1/2-2 hours', 5400, 7200]]);
+  assert.deepEqual(t('Bake forty-five minutes'), [['forty-five minutes', 2700, null]]);
+  assert.deepEqual(t('Cut into 1/2-inch slices and bake 20 minutes.'), [['20 minutes', 1200, null]]);
+});
+
 test('oven temperatures and pan sizes in the chosen units', () => {
   const m = s => convertStep(s, 'metric').map(x => (x.was ? `[${x.text}]` : x.text)).join('');
   const u = s => convertStep(s, 'us').map(x => (x.was ? `[${x.text}]` : x.text)).join('');

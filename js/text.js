@@ -1,24 +1,31 @@
 // Reading the words of a recipe: times in the steps ("bake 25–30 minutes"), oven temperatures and pan sizes,
 // which ingredients each step uses, and a whole recipe pasted in as one block of text.
 // No page code here, so the tests run it in Node.
-import { parseLine, headingOf, normalize, singular } from './ingredients.js';
+import { parseLine, headingOf, normalize, singular, readNumber } from './ingredients.js';
 import { fToC, cToF } from './units.js';
 
 // ---------- times ----------
 const NUMWORD = { a: 1, an: 1, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12, fifteen: 15, twenty: 20, thirty: 30, forty: 40, 'forty-five': 45, fifty: 50, sixty: 60, ninety: 90 };
-const NUM = String.raw`(?:\d+(?:\.\d+)?(?:\s*(?:½|¼|¾|1/2|1/4|3/4))?|½|¼|¾|half(?:\s+an?)?|an?|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|fifteen|twenty|thirty|forty-five|forty|fifty|sixty|ninety)`;
+const WORDS = 'one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|fifteen|twenty|thirty|forty-five|forty|fifty|sixty|ninety';
+const PARTS = { 'a half': 0.5, 'one half': 0.5, 'a quarter': 0.25, 'three quarters': 0.75 };
+const PART = String.raw`(?:a\s+half|one\s+half|a\s+quarter|three\s+quarters)`;
+// A number of hours or minutes, longest forms first so "1-1/2" and "1/2" are read whole, not from the digit after
+// the slash: "1 and 1/2", "one and a half", "1-1/2", "1 1/2", "1/2", "1½", "2.5", "½", "half an", "an", "ten".
+const NUM = String.raw`(?:(?:\d+|${WORDS})\s+and\s+(?:${PART}|\d+/\d+)|\d+\s*-\s*\d+/\d+|\d+\s+\d+/\d+|\d+/\d+|\d+(?:\.\d+)?(?:\s*[½¼¾⅓⅔])?|[½¼¾⅓⅔]|half(?:\s+an?)?|an?|${WORDS})`;
 const TUNIT = String.raw`(?:hours?|hrs?\.?|minutes?|mins?\.?|seconds?|secs?\.?)`;
-const TIME_RX = new RegExp(String.raw`\b(${NUM})(?:\s*(?:-|–|—|to|or)\s*(${NUM}))?\s*-?\s*(${TUNIT})(?:\s*,?\s*(?:and\s+)?(${NUM})\s*-?\s*(minutes?|mins?\.?))?(?![a-z])`, 'gi');
+// "1 hour", "25–30 minutes", "an hour and a half", "1 hr. 15 min." Not inside a word or straight after a slash.
+const TIME_RX = new RegExp(String.raw`(?<![\w/.])(?<a>${NUM})(?:\s*(?:-|–|—|to|or)\s*(?<b>${NUM}))?\s*-?\s*(?<unit>${TUNIT})(?:\s+and\s+(?<part>${PART})\b|\s*,?\s*(?:and\s+)?(?<mins>${NUM})\s*-?\s*(?:minutes?|mins?\.?))?(?![a-z])`, 'gi');
 const VERBS = /^(bake|roast|simmer|boil|cook|fry|saut[eé]|braise|steam|poach|broil|grill|toast|rest|let|leave|chill|refrigerate|freeze|cool|rise|proof|prove|knead|beat|whisk|stir|mix|blend|soak|marinate|steep|cover|microwave|reduce|brown|sear|caramelize|set|stand|heat|preheat|cream|process|pulse|shake|drain|bring|continue|keep)$/i;
 
 function numValue(s) {
-  s = s.trim().toLowerCase();
+  s = normalize(s).toLowerCase().replace(/(\d)\s*-\s*(?=\d+\/\d)/, '$1-');
   if (/^half/.test(s)) return 0.5;
   if (NUMWORD[s] != null) return NUMWORD[s];
-  const m = /^(\d+(?:\.\d+)?)?\s*(½|¼|¾|1\/2|1\/4|3\/4)?$/.exec(s);
-  if (!m) return NaN;
-  const frac = { '½': 0.5, '¼': 0.25, '¾': 0.75, '1/2': 0.5, '1/4': 0.25, '3/4': 0.75 }[m[2]] || 0;
-  return (m[1] ? +m[1] : 0) + frac;
+  // "forty and a half": the words past twenty that readNumber doesn't know
+  const and = /^([a-z-]+) and (a half|one half|a quarter|three quarters)$/.exec(s);
+  if (and && NUMWORD[and[1]] != null) return NUMWORD[and[1]] + PARTS[and[2]];
+  const n = readNumber(s);
+  return n && !n.article && n.len === s.length ? n.v : NaN;
 }
 const unitSecs = u => (/^h/i.test(u) ? 3600 : /^m/i.test(u) ? 60 : 1);
 
@@ -28,12 +35,13 @@ export function findTimes(step) {
   TIME_RX.lastIndex = 0;
   let m;
   while ((m = TIME_RX.exec(text))) {
-    const per = unitSecs(m[3]);
-    const a = numValue(m[1]), b = m[2] ? numValue(m[2]) : null;
+    const g = m.groups, per = unitSecs(g.unit);
+    const a = numValue(g.a), b = g.b ? numValue(g.b) : null;
     if (!(a > 0) || (b != null && !(b > a))) continue;
-    if (/^an?$/i.test(m[1]) && m[2]) continue;
+    if (/^an?$/i.test(g.a) && g.b) continue;
     let secs = Math.round(a * per), secs2 = b != null ? Math.round(b * per) : null;
-    if (m[4] && !m[2] && per === 3600) secs += Math.round(numValue(m[4]) * 60);
+    if (g.part && !g.b) secs += Math.round(PARTS[g.part.toLowerCase().replace(/\s+/g, ' ')] * per);
+    if (g.mins && !g.b && per === 3600) secs += Math.round(numValue(g.mins) * 60);
     if (!(secs > 0) || secs > 48 * 3600) continue;
     out.push({ start: m.index, end: m.index + m[0].length, text: m[0], secs, secs2, label: labelFor(text, m.index) });
   }
