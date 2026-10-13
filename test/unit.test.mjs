@@ -119,6 +119,11 @@ test('a second amount after the item scales and converts with the line', () => {
   assert.equal(show('1/2 cup butter (1 stick), melted'), '½ cup butter (1 stick), melted', 'it stays where the card put it');
   assert.equal(show('1/2 cup butter (1 stick), melted', x2), '1 cup butter (2 sticks), melted');
   assert.equal(show('1/2 cup butter (1 stick), melted', { factor: 0.5 }), '¼ cup butter (½ stick), melted');
+  // At the card's own amounts its other amount is the card's figure, not rounded to the nearest third or quarter.
+  assert.equal(show('6 tbsp butter (3/8 cup)'), '6 tbsp butter (⅜ cup)');
+  assert.equal(show('2 T. flour (1/8 cup)'), '2 tbsp flour (⅛ cup)');
+  assert.equal(show('2 T. (1/8 cup) flour'), '2 tbsp (⅛ cup) flour');
+  assert.equal(show('6 tbsp butter (3/8 cup)', x2), '¾ cup butter (¾ cup)');
   assert.equal(show('1 cup milk (240 ml)', x2), '2 cups milk (480 ml)');
   assert.equal(show('1 cup milk (240 ml)', m), '235 ml milk', 'converted, so the card’s other amount drops out');
   assert.equal(show('2 1/4 cups all-purpose flour (280g)', x2), '4½ cups all-purpose flour (560 g)');
