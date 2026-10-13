@@ -19,7 +19,11 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = process.env.FS_OUT || join(tmpdir(), 'from-scratch-e2e');
 await mkdir(OUT, { recursive: true });
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.woff2': 'font/woff2', '.webmanifest': 'application/manifest+json', '.json': 'application/json' };
+// down: the server refuses every connection, as with no signal. (setOffline doesn't stop a service worker's own
+// fetches, so it can't show whether the offline copy works.)
+let down = false;
 const server = createServer(async (req, res) => {
+  if (down) { req.socket.destroy(); return; }
   const path = decodeURIComponent(new URL(req.url, 'http://x').pathname);
   let body;
   try { body = await readFile(join(root, path === '/' ? 'index.html' : path)); } catch { res.writeHead(404); res.end(); return; }
@@ -419,14 +423,14 @@ await page.reload();
 await page.locator('.card').first().waitFor();
 assert.equal(await page.locator('.card').count(), 9);
 await fits(page, 'the full box');
-await page.waitForFunction(() => navigator.serviceWorker?.controller, null, { timeout: 10000, polling: 100 }).catch(() => {});
-await mark.ctx.setOffline(true);
+await page.waitForFunction(() => navigator.serviceWorker?.controller, null, { timeout: 10000, polling: 100 });
+down = true;
 await page.reload();
 await page.locator('.card').first().waitFor();
 assert.equal(await page.locator('.card').count(), 9, 'loads offline');
 await page.goto(base + '#/r/sample-walt-chili');
 assert.match(await page.locator('.rtitle').innerText(), /Chili/);
-await mark.ctx.setOffline(false);
+down = false;
 await mark.ctx.close();
 
 // ---------- a full browser ----------
