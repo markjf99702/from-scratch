@@ -616,6 +616,17 @@ test('links pack and unpack, compressed', async () => {
   await assert.rejects(readIncoming('#/add/zNOTREAL'));
 });
 
+test('a link with a full stop after it, or words around it, still opens', async () => {
+  const link = `https://junkdrawer.works/from-scratch/#/add/${await pack({ fromScratch: 1, recipes: [{ title: 'Tea', ingredients: ['1 tea bag'] }] })}`;
+  assert.equal((await readIncoming(link + '.')).recipes[0].title, 'Tea');
+  assert.equal((await readIncoming(`Here it is: ${link} Enjoy!`)).recipes[0].title, 'Tea');
+  assert.equal((await readIncoming(`Mom’s tea (${link}), from Claude`)).recipes[0].title, 'Tea');
+  // A file is JSON, even when a note in it has a link.
+  const file = JSON.stringify([{ title: 'Scones', notes: `Like the tea: ${link}` }]);
+  assert.equal((await readIncoming(file)).recipes[0].title, 'Scones');
+  assert.equal((await readIncoming(JSON.stringify({ fromScratch: 1, recipes: [{ title: 'Jam', source: link }] }))).recipes[0].title, 'Jam');
+});
+
 test('every sample recipe is complete and parses cleanly', () => {
   for (const s of SAMPLES) {
     const r = cleanRecipe(s);

@@ -2,7 +2,7 @@
 import { box, prefs, KEY, PREFS } from './store.js';
 import { photos, blobToDataURL, dataURLToBlob } from './photos.js';
 import { allTags, hasTag, matches, possessive, fold, today, canon } from './recipe.js';
-import { readIncoming, LINK_RX, forLink } from './share.js';
+import { readIncoming, linkData, forLink } from './share.js';
 import { SAMPLES, SAMPLE_PHOTOS } from './samples.js';
 import { app, $, esc, ui, on, go, toast, sheet, closeSheet, sheetOpen, icon, plural, canDownload, download } from './ui.js';
 import { recipePage, rerenderRecipe } from './recipe-page.js';
@@ -210,8 +210,8 @@ function addPage() {
 async function openText(text) {
   const t = String(text || '').trim();
   if (!t) { toast('Paste the link or the text of the file first'); return; }
-  const m = LINK_RX.exec(t);
-  if (m && t[0] !== '{') { go('/add/' + m[1]); return; }
+  const data = linkData(t);
+  if (data) { go('/add/' + data); return; }
   try {
     const got = await readIncoming(t);
     if (got.kind === 'backup') return restoreBackup(got);

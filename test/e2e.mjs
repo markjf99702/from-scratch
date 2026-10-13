@@ -329,9 +329,9 @@ await page.locator('.review').first().waitFor();
 assert.equal(await page.locator('text=Already in your box').count(), 2, 'opening the same link again adds nothing');
 assert.equal(await page.locator('[data-act="add"]').isDisabled(), true);
 
-// Pasting what Claude gave, or opening the file, goes to the same place.
+// Pasting what Claude gave, or opening the file, goes to the same place, even with words and a full stop around the link.
 await page.goto(base + '#/add');
-await page.fill('#incomingText', claudeLink);
+await page.fill('#incomingText', `Here are Nana’s cards: ${claudeLink}.`);
 await page.click('[data-act="open"]');
 await page.locator('.review').first().waitFor();
 

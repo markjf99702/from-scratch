@@ -5,7 +5,7 @@ import { photos, shrink } from './photos.js';
 import { allTags, today } from './recipe.js';
 import { parseLine, present, amountWords } from './ingredients.js';
 import { splitRecipe, findTimes } from './text.js';
-import { LINK_RX } from './share.js';
+import { linkData } from './share.js';
 import { app, $, esc, on, go, toast, icon, amountHTML } from './ui.js';
 
 const DRAFT = 'fromscratch.draft';
@@ -178,8 +178,8 @@ export function pastePage() {
       if (!e.target.closest('[data-act="split"]')) return;
       const text = $('pasteText').value;
       if (!text.trim()) { toast('Paste a recipe first'); return; }
-      const link = LINK_RX.exec(text.trim());
-      if (link) { go('/add/' + link[1]); return; }
+      const link = linkData(text);
+      if (link) { go('/add/' + link); return; }
       const got = splitRecipe(text);
       if (!got.ingredients.length && !got.steps.length) { toast('No ingredients or steps turned up in that. Try typing it in instead.'); return; }
       writeDraft('new', {

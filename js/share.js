@@ -62,13 +62,23 @@ export async function recipeLink(recipes) {
   return `${base()}#/add/${await pack({ fromScratch: 1, recipes: recipes.map(forLink) })}`;
 }
 
-export const LINK_RX = /#\/add\/([zj][A-Za-z0-9_-]+)\s*$/;
+// The data ends where base64url does, so a full stop or words after the link don't come along.
+export const LINK_RX = /#\/add\/([zj][A-Za-z0-9_-]+)/;
+
+// The data of a recipe link anywhere in some text ("Here it is: https://…#/add/z…. Enjoy!"), or null.
+// Text that is JSON (a file) is read as JSON, even with a link in one of its notes.
+export function linkData(text) {
+  const t = String(text || '').trim();
+  if (t[0] === '{' || t[0] === '[') return null;
+  const m = LINK_RX.exec(t);
+  return m ? m[1] : null;
+}
 
 // Text from a link, a file or the paste box → { kind: 'batch', name, recipes } or { kind: 'backup', box, photos }.
 export async function readIncoming(text) {
   const t = String(text || '').trim();
-  const m = LINK_RX.exec(t);
-  const obj = m && t[0] !== '{' ? await unpack(m[1]) : JSON.parse(t);
+  const data = linkData(t);
+  const obj = data ? await unpack(data) : JSON.parse(t);
   if (obj && obj.fromScratch && obj.box) return { kind: 'backup', box: cleanBox(obj.box), photos: obj.photos && typeof obj.photos === 'object' ? obj.photos : {} };
   const list = Array.isArray(obj) ? obj : Array.isArray(obj?.recipes) ? obj.recipes : obj?.title ? [obj] : null;
   if (!list) throw new Error('empty');
