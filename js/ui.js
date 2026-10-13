@@ -93,7 +93,7 @@ export function footer() {
 // Kitchen fractions are drawn from the font's own digits with its fraction feature, so ⅓ and ⅛ match ½.
 const FR = { '⅛': '1⁄8', '¼': '1⁄4', '⅓': '1⁄3', '⅜': '3⁄8', '½': '1⁄2', '⅝': '5⁄8', '⅔': '2⁄3', '¾': '3⁄4', '⅞': '7⁄8', '⅙': '1⁄6', '⅚': '5⁄6', '⅕': '1⁄5' };
 export function amountHTML(s) {
-  return esc(s).replace(/(\d?)([⅛¼⅓⅜½⅝⅔¾⅞⅙⅚⅕])/g, (m, whole, f) => `${whole}${whole ? '\u2009' : ''}<span class="fr">${FR[f]}</span>`)
+  return esc(s).replace(/(\d?)([⅛¼⅓⅜½⅝⅔¾⅞⅙⅚⅕])/g, (m, whole, f) => (whole ? `<span class="nw">${whole}\u2009<span class="fr">${FR[f]}</span></span>` : `<span class="fr">${FR[f]}</span>`))
     .replace(/(\d+)\/(\d+)/g, '<span class="fr">$1⁄$2</span>');
 }
 

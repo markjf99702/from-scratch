@@ -71,6 +71,20 @@ const text = page => page.locator('main').innerText();
 // Nothing sits on top of it: the middle of the element is the element itself.
 const uncovered = (page, sel) => page.locator(sel).evaluate(el => { const r = el.getBoundingClientRect(); const hit = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2); return !!hit && el.contains(hit); });
 const overlaps = (page, a, b) => page.evaluate(([a, b]) => { const r = document.querySelector(a).getBoundingClientRect(), s = document.querySelector(b).getBoundingClientRect(); return r.left < s.right && s.left < r.right && r.top < s.bottom && s.top < r.bottom; }, [a, b]);
+// Amounts that wrap anywhere but at "+": each word's line, grouped between the "+"s, should be one line per group.
+const badBreaks = page => page.evaluate(() => [...document.querySelectorAll('.ing .amt')].flatMap(el => {
+  const words = [];
+  const walk = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+  for (let n = walk.nextNode(); n; n = walk.nextNode()) for (const m of n.data.matchAll(/\S+/g)) {
+    const r = document.createRange();
+    r.setStart(n, m.index);
+    r.setEnd(n, m.index + m[0].length);
+    words.push([m[0], Math.round(r.getBoundingClientRect().top)]);
+  }
+  const groups = [[]];
+  for (const w of words) if (w[0] === '+') groups.push([]); else groups.at(-1).push(w);
+  return groups.some(g => g.some(w => Math.abs(w[1] - g[0][1]) > 2)) ? [el.textContent.replace(/\s+/g, ' ')] : [];
+}));
 const startTimer = page => page.evaluate(() => window.fromScratch.timers.start({ secs: 600, label: 'Rise', title: 'Rolls', recipe: 'x', step: 9 }));
 const stopTimers = page => page.evaluate(() => window.fromScratch.timers.all().forEach(t => window.fromScratch.timers.cancel(t.id)));
 const ingredient = (page, i) => page.locator(`.ing[data-i="${i}"]`).innerText().then(t => t.replace(/\s+/g, ' ').trim());
@@ -162,6 +176,8 @@ assert.equal(await ingredient(page, 0), '1 1⁄2 cups all-purpose flour');
 // Oma Liesel's grams, in cups.
 await page.goto(base + '#/r/sample-liesel-apple-cake');
 await page.click('[data-units="us"]');
+assert.equal(await ingredient(page, 0), '1⁄2 cup + 1 tbsp ≈ butter, soft');
+assert.deepEqual(await badBreaks(page), [], 'a number keeps its unit and its ≈ on its line');
 assert.equal(await ingredient(page, 4), '1 2⁄3 cups ≈ flour');
 assert.equal(await ingredient(page, 1), '3⁄4 cup ≈ sugar');
 assert.match(await page.locator('.steps').innerText(), /350°F/);

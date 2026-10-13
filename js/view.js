@@ -18,21 +18,26 @@ export function factorWords(f) {
   return words[+f.toFixed(4)] || `Scaled ${factorLabel(f)}`;
 }
 
+// A number stays on the same line as its unit, and the ≈ with them: no-break spaces, so an amount like
+// "½ cup + 1 tbsp ≈" only breaks at the "+".
+const NB = '\u00a0';
+const together = s => String(s).replace(/ /g, NB);
+
 // One ingredient as HTML: the amount in its own column, then the item and any note.
 // "Juice of 1 lemon" keeps its words in order: "Juice of 1" in the amount column, "lemon" after it.
 export function ingredientHTML(v) {
   const before = modBefore(v.mod) ? v.mod + ' ' : '', within = v.mod && !before ? ' ' + v.mod : '';
-  const conv = v.conv ? ` <span class="conv" title="${esc(v.conv.source || 'Converted')}">≈</span>` : '';
+  const conv = v.conv ? `${NB}<span class="conv" title="${esc(v.conv.source || 'Converted')}">≈</span>` : '';
   let amount = '';
   if (v.qty) {
-    amount = (v.pre ? `<span class="pre">${esc(v.pre)}</span> ` : '') + esc(before) + amountHTML(v.qty) + esc(within) +
-      (v.unit ? ' ' + esc(v.unit) : '') + (v.more ? ' + ' + amountHTML(v.more) : '') + conv;
+    amount = (v.pre ? `<span class="pre">${esc(v.pre)}</span> ` : '') + esc(together(before)) + amountHTML(v.qty) + esc(together(within)) +
+      (v.unit ? NB + esc(v.unit) : '') + (v.more ? ' + ' + v.more.split(' + ').map(m => amountHTML(together(m))).join(' + ') : '') + conv;
   }
   const lead = !v.qty && v.pre ? esc(v.pre) + ' ' : '';
-  const alt = v.alt && !v.altEnd ? `<span class="alt">(${amountHTML(v.alt)})</span> ` : '';
-  const altEnd = v.alt && v.altEnd ? ` <span class="alt">(${amountHTML(v.alt)})</span>` : '';
+  const alt = v.alt && !v.altEnd ? `<span class="alt">(${amountHTML(together(v.alt))})</span> ` : '';
+  const altEnd = v.alt && v.altEnd ? ` <span class="alt">(${amountHTML(together(v.alt))})</span>` : '';
   const note = [v.note, v.hint].filter(Boolean).map(esc).join('; ');
-  const size = v.size ? ` <span class="size">(${amountHTML(sizeWords(v))})</span>` : '';
+  const size = v.size ? ` <span class="size">(${amountHTML(sizeWords(v).replace(' ', NB))})</span>` : '';
   return `<span class="amt">${amount}</span><span class="what">${lead}${alt}${v.of ? '<span class="of">of </span>' : ''}${esc(v.item)}${altEnd}${size}${note ? `<span class="note">, ${note}</span>` : ''}</span>`;
 }
 
