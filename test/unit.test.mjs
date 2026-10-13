@@ -211,6 +211,16 @@ test('things counted without a unit become plural or singular', () => {
   assert.equal(singular('tomatoes'), 'tomato');
 });
 
+test('the card’s own word for a count stays unless scaling takes it across one', () => {
+  for (const line of ['8 jumbo shrimp', '2 celery', '2 fish', '2 garlic', '4 sheep', '6 Eier', '4 Kartoffeln', '6 Äpfel', '3 uova'])
+    assert.equal(show(line), line, `${line} as written`);
+  assert.equal(show('8 jumbo shrimp', { factor: 2 }), '16 jumbo shrimp');
+  assert.equal(show('6 Eier', { factor: 0.5 }), '3 Eier');
+  assert.equal(show('1 egg', { factor: 2 }), '2 eggs');
+  assert.equal(show('2 eggs', { factor: 0.5 }), '1 egg');
+  assert.equal(show('2–3 apples', { factor: 0.5 }), '1–1½ apples', 'the top of a range decides');
+});
+
 // ---------- converting ----------
 test('USDA cup weights for baking ingredients', () => {
   assert.equal(densityFor('all-purpose flour').g, 125);

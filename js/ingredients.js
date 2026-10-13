@@ -467,8 +467,10 @@ export function present(p, { factor = 1, mode = 'as' } = {}) {
   if (['pinch', 'dash', 'handful'].includes(parts[0].u)) out.of = true;
   if (p.alt && !conv) { out.alt = altText(p.alt, factor); if (p.alt.end) out.altEnd = true; }
   if (!p.u && !pAmbiguousCount(p)) {
-    const n = q2 != null ? q2 : q;
-    out.item = recount(p.item, n);
+    // The card's own word stays ("8 jumbo shrimp", "6 Eier"). Only a scale that takes the count across one
+    // changes it, and only its last word: 1 egg → 2 eggs, 2 eggs → 1 egg.
+    const was = p.q2 != null ? p.q2 : p.q, n = q2 != null ? q2 : q;
+    if ((was > 1) !== (n > 1)) out.item = recount(p.item, n);
     if (scaled && /\beggs?\b/i.test(p.item) && q2 == null && Math.abs(q - Math.round(q)) > 0.01) {
       const part = { '¼': 'a quarter', '⅓': 'a third', '½': 'half', '⅔': 'two thirds', '¾': 'three quarters' }[kitchen(q - Math.floor(q), [2, 3, 4])];
       if (part) out.hint = `beat the last egg and use ${part} of it`;
