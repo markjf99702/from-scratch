@@ -18,7 +18,7 @@ const FOLDER = { name: 'From Scratch', mimeType: 'application/vnd.google-apps.fo
 const FILE = { name: 'From Scratch recipes.json', mimeType: 'application/json', appProperties: { fromscratch: 'recipes' } };
 // KT is shared by every junkdrawer.works project: one sign-in, good for an hour, serves them all.
 const KT = 'junkdrawer.google', KS = 'fromscratch.drive';
-const RETRY = { retry: true };
+const RETRY = { retry: true }, STOPPED = { stopped: true };
 
 export const available = () => ORIGINS.includes(location.origin) && !('single' in document.documentElement.dataset);
 
@@ -29,6 +29,7 @@ const fresh = () => ({ on: false, email: '', fileId: '', version: '', last: 0, p
 let st = { ...fresh(), ...(get(KS) || {}) };
 let tok = get(KT);
 let status = 'off', note = '', busy = null, again = false, client = null, gisLoading = false, soon = null;
+let gen = 0; // goes up when this device stops saving, so a sync already under way writes nothing more
 const watchers = new Set();
 const saveSt = () => put(KS, st);
 
@@ -103,14 +104,18 @@ async function findFile() {
 }
 
 // ---------- one sync ----------
-async function run(tries = 0) {
+async function run(tries = 0, g = gen) {
+  // Stopped (or erased) while this was waiting on Drive: leave both sides as they are.
+  const going = () => { if (g !== gen || !st.on) throw STOPPED; };
   try {
     const seq = box.seq;
     const file = await findFile();
+    going();
     let local = box.state;
     if (file?.extra?.length) {
       for (const x of file.extra) {
         local = mergeBoxes(local, await download(x.id));
+        going();
         await api('PATCH', `drive/v3/files/${x.id}`, JSON.stringify({ trashed: true }), 'application/json');
       }
     }
@@ -128,12 +133,15 @@ async function run(tries = 0) {
         // Another device may have saved since we read the file; then start over with its version.
         const now = await api('GET', `drive/v3/files/${file.id}?fields=version`);
         if (String(now.version) !== file.version) throw RETRY;
+        going();
         const x = await api('PATCH', `upload/drive/v3/files/${file.id}?uploadType=media&fields=id,version`, body(merged), 'application/json');
         saved = { id: file.id, version: String(x.version) };
       }
     } else {
+      going();
       saved = await create(merged);
     }
+    going();
     // Saved here while this ran: merge again rather than overwrite it.
     if (box.seq !== seq) throw RETRY;
     box.replace(merged, 'sync');
@@ -143,7 +151,7 @@ async function run(tries = 0) {
     st.last = Date.now();
     saveSt();
   } catch (e) {
-    if (e === RETRY && tries < 4) return run(tries + 1);
+    if (e === RETRY && tries < 4 && g === gen) return run(tries + 1, g);
     throw e;
   }
 }
@@ -154,8 +162,9 @@ export function sync() {
   if (busy) { again = true; return busy; }
   clearTimeout(soon);
   setStatus('busy');
-  busy = run().then(() => setStatus('ok'), e => {
-    if (e?.auth) setStatus('tap');
+  busy = run().then(() => setStatus(st.on ? 'ok' : 'off'), e => {
+    if (!st.on || e === STOPPED) setStatus(st.on ? status : 'off');
+    else if (e?.auth) setStatus('tap');
     else if (e?.bad) setStatus('error', 'The recipe file in your Drive isn’t readable, so From Scratch left it alone. Save a backup here, then remove that file from Drive to start it fresh.');
     else if (e === RETRY) setStatus('error', 'Another device kept saving. Try again in a moment.');
     else setStatus('error', 'Couldn’t reach Google Drive. Check the connection and try again.');
@@ -238,10 +247,13 @@ async function start() {
 function now() { if (!st.on) start(); else if (!live()) signIn(); else sync(); }
 // Stop on this device. The shared sign-in stays for the other projects, and nothing is revoked:
 // revoking would cancel Google's permission for every project on this client.
-function stop() {
+// Erasing the device stops it too, so the recipes in Drive don't come straight back.
+export function stop() {
+  gen++;
   st = fresh();
   saveSt();
   clearTimeout(soon);
+  again = false;
   setStatus('off');
 }
 

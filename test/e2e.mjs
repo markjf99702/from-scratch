@@ -571,6 +571,30 @@ assert.equal(g.calls.length, calls, 'nothing goes to Drive after stopping');
 await A.page.goto(base + '#/');
 assert.equal(await A.page.locator('#cloud').isVisible(), false);
 await A.ctx.close();
+
+// Erasing a device that saves to Drive stops it saving there, so the recipes in Drive don't come straight back,
+// not even from a sync that was already waiting on Drive when Erase was tapped.
+let heldOnce, letGo;
+const held = new Promise(r => { heldOnce = r; }), goOn = new Promise(r => { letGo = r; });
+await B.ctx.route(/googleapis\.com\/drive\/v3\/files\/[\w-]+\?alt=media/, async route => {
+  if (heldOnce) { const h = heldOnce; heldOnce = null; h(); await goOn; }
+  await route.fallback();
+});
+await B.page.goto(base + '#/settings');
+await put(B.page, { id: 'r-late', title: 'Late Change', ingredients: ['1 cup flour'], steps: ['Bake 10 minutes.'] });
+await held;
+await B.page.click('[data-act="erase"]');
+assert.match(await B.page.locator('#sheet').innerText(), /stops saving to Google Drive/);
+await B.page.click('[data-a="yes"]');
+await B.page.locator('text=Your recipe box is empty').waitFor();
+letGo();
+await B.page.waitForFunction(() => window.fromScratch.sync().status === 'off', null, { timeout: 10000 });
+await B.page.waitForTimeout(3000);
+assert.equal(await B.page.evaluate(() => window.fromScratch.box.all().length), 0, 'nothing comes back from Drive after erasing');
+assert.equal(await B.page.evaluate(() => window.fromScratch.sync().on), false);
+assert.equal(await B.page.evaluate(() => localStorage.getItem('fromscratch.drive')), null);
+assert.equal(await B.page.locator('#cloud').isVisible(), false);
+assert.deepEqual(liveInDrive(), ['Dutch Apple Pie', 'Irish Soda Bread', 'Scones'], 'Drive keeps its recipes');
 await B.ctx.close();
 
 // Away from junkdrawer.works (here, without the rewrite), there's no Drive at all and nothing loads from Google.

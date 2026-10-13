@@ -9,7 +9,7 @@ import { recipePage, rerenderRecipe } from './recipe-page.js';
 import { cookPage, leaveCook } from './cook.js';
 import { editPage, pastePage, editing } from './edit.js';
 import { initTimers, timers } from './timers.js';
-import { initSync, chip, card, syncState } from './sync.js';
+import { initSync, chip, card, syncState, stop as stopSync } from './sync.js';
 import { ingredientsHTML, metaHTML, UNIT_MODES } from './view.js';
 
 let route = '';
@@ -372,14 +372,17 @@ async function restoreBackup(got) {
 }
 
 function eraseAll() {
+  const drive = syncState().on;
   sheet(`<h2>Erase everything on this device?</h2>
-    <p>This removes every recipe and photo from this browser. It doesn’t touch Google Drive or anyone you’ve sent recipes to. Save a backup first if you want to keep them.</p>
+    <p>This removes every recipe and photo from this browser${drive ? ', and this device stops saving to Google Drive' : ''}. It doesn’t touch Google Drive or anyone you’ve sent recipes to. Save a backup first if you want to keep them.</p>
     <div class="row"><button type="button" class="btn danger" data-a="yes">Erase this device</button><button type="button" class="btn quiet" data-a="no">Keep everything</button></div>`, (body, close) => {
     body.addEventListener('click', async e => {
       const a = e.target.closest('[data-a]')?.dataset.a;
       if (!a) return;
       close();
       if (a !== 'yes') return;
+      // First, so the recipes in Drive don't sync straight back into the empty box.
+      stopSync();
       box.erase();
       await photos.clear();
       try { localStorage.removeItem('fromscratch.drive'); localStorage.removeItem('fromscratch.timers'); localStorage.removeItem('fromscratch.draft'); } catch { /* already gone */ }
