@@ -123,6 +123,9 @@ assert.match(await page.locator('.kitchen').innerText(), /From the kitchen of\s+
 assert.equal(await ingredient(page, 0), '1 1⁄2 cups all-purpose flour'.replace('1 1', '1 1'), 'as written');
 await page.locator('#photoSec:not([hidden]) img').waitFor();
 assert.ok(await page.locator('#photoSec img').evaluate(img => img.complete && img.naturalWidth > 500), 'the photo of the card shows');
+await page.click('[data-act="photo"]');
+assert.equal(await page.getByRole('dialog', { name: 'The original card' }).count(), 1, 'the big photo’s sheet has a name too');
+await page.keyboard.press('Escape');
 await fits(page, 'a recipe');
 assert.equal(await page.locator('.steps-sec .sec-h').evaluate(h => getComputedStyle(h).marginTop), '20px', 'Steps has room above it, under Cook from this');
 
@@ -132,6 +135,7 @@ assert.equal(await page.locator('.ing[data-i="1"].got').count(), 1);
 
 // Scale by two.
 await page.click('[data-act="scale"]');
+assert.equal(await page.getByRole('dialog', { name: 'Scale this recipe' }).count(), 1, 'the sheet is named by its heading');
 await page.click('.chip[data-f="2"]');
 await page.locator('.scaled').waitFor();
 assert.match(await page.locator('.scaled').innerText(), /Doubled · Serves 18/);

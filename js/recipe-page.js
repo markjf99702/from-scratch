@@ -134,7 +134,7 @@ function click(e, r) {
   if (act === 'share') shareSheet(r);
   if (act === 'print') printSheet(r);
   if (act === 'remove') removeSheet(r);
-  if (act === 'photo' && photoUrl) sheet(`<figure class="big-photo"><img src="${photoUrl}" alt="Photo of the original card for ${esc(r.title)}"></figure><div class="row"><button type="button" class="btn" data-a="close">Close</button></div>`, (body, close) => body.addEventListener('click', ev => { if (ev.target.closest('[data-a="close"]')) close(); }));
+  if (act === 'photo' && photoUrl) sheet(`<figure class="big-photo"><img src="${photoUrl}" alt="Photo of the original card for ${esc(r.title)}"></figure><div class="row"><button type="button" class="btn" data-a="close">Close</button></div>`, (body, close) => body.addEventListener('click', ev => { if (ev.target.closest('[data-a="close"]')) close(); }), 'The original card');
 }
 
 // ---------- scaling ----------

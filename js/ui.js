@@ -31,12 +31,17 @@ export function toast(message, action, ms = action ? 6500 : 3000) {
 }
 
 // The sheet that slides up (scale, share, print, confirmations). bind() wires up what's inside once it's drawn.
-export function sheet(html, bind) {
+// A screen reader names it by its heading, or by label when it has none (the photo of the card).
+export function sheet(html, bind, label = '') {
   const dlg = $('sheet');
   // A fresh body each time, so listeners from the last sheet don't stay attached.
   const old = dlg.querySelector('.sheet-body'), body = old.cloneNode(false);
   old.replaceWith(body);
   body.innerHTML = html;
+  const h = body.querySelector('h2');
+  if (h) h.id = 'sheetTitle';
+  if (h) dlg.setAttribute('aria-labelledby', 'sheetTitle'); else dlg.removeAttribute('aria-labelledby');
+  if (!h && label) dlg.setAttribute('aria-label', label); else dlg.removeAttribute('aria-label');
   if (!dlg.open) {
     if (typeof dlg.showModal === 'function') dlg.showModal(); else dlg.setAttribute('open', '');
   }
