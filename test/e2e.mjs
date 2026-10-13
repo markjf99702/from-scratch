@@ -435,6 +435,22 @@ await crowded.page.goto(base + '#/');
 await crowded.page.locator('text=Your recipe box is empty').waitFor();
 await crowded.ctx.close();
 
+// ---------- long words ----------
+// A German cake and a web address in the notes break onto the next line instead of pushing the page sideways.
+const wide = await device({ sw: false });
+await wide.page.goto(base);
+await wide.page.evaluate(url => window.fromScratch.box.put({ id: 'r-torte', title: 'Schwarzwälderkirschtorte', from: 'Oma Liesel', ingredients: ['200 g Mehl'], steps: [`Backen 40 Minuten, siehe ${url}`], notes: `Aus ${url}`, source: url }),
+  'https://www.chefkoch.de/rezepte/1234567890123456/Schwarzwaelder-Kirschtorte-nach-Omas-Art.html');
+await wide.page.goto(base + '#/r/r-torte');
+await wide.page.locator('.rtitle').waitFor();
+await fits(wide.page, 'a recipe with long words');
+await wide.page.goto(base + '#/r/r-torte/cook');
+await wide.page.click('[data-go="1"]');
+await wide.page.click('[data-go="1"]');
+await wide.page.locator('text=That was the last step').waitFor();
+await fits(wide.page, 'cook mode’s last screen, with a web address in the notes');
+await wide.ctx.close();
+
 // ---------- Google Drive ----------
 // Two devices share one fake Drive. The page only offers Drive at junkdrawer.works, so it's told this address is fine too.
 const g = fakeGoogle();

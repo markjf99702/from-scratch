@@ -409,6 +409,8 @@ li.ing:not(:has(.tick)) { padding-left: 0; }
 .rfoot { margin-top: 22px; }
 .tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 8px; }
 .source { color: var(--muted); font-size: 14px; margin: 0; }
+/* A long word (a German cake, a web address in the notes) breaks onto the next line instead of pushing the page sideways. */
+.rtitle, .kitchen .hand, .steps > li, .note-card, .source, .cook-step, .card .title, .whose { overflow-wrap: anywhere; }
 .actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 4px 0 0; }
 .act { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 4px; border-radius: 12px; border: 1.5px solid var(--line-2); background: var(--card-2); color: var(--ink); font-weight: 700; font-size: 14.5px; text-decoration: none; }
 .act svg { width: 22px; height: 22px; color: var(--tin); }
