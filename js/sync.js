@@ -18,7 +18,7 @@ const FOLDER = { name: 'From Scratch', mimeType: 'application/vnd.google-apps.fo
 const FILE = { name: 'From Scratch recipes.json', mimeType: 'application/json', appProperties: { fromscratch: 'recipes' } };
 // KT is shared by every junkdrawer.works project: one sign-in, good for an hour, serves them all.
 const KT = 'junkdrawer.google', KS = 'fromscratch.drive';
-const RETRY = { retry: true }, STOPPED = { stopped: true };
+const RETRY = { retry: true }, STOPPED = { stopped: true }, FULL = { full: true };
 
 export const available = () => ORIGINS.includes(location.origin) && !('single' in document.documentElement.dataset);
 
@@ -144,7 +144,8 @@ async function run(tries = 0, g = gen) {
     going();
     // Saved here while this ran: merge again rather than overwrite it.
     if (box.seq !== seq) throw RETRY;
-    box.replace(merged, 'sync');
+    // Storage full: this device keeps what it had and doesn't count Drive's copy as seen, so it tries again.
+    if (!box.replace(merged, 'sync')) throw FULL;
     st.fileId = saved.id;
     st.version = saved.version;
     st.pending = false;
@@ -165,6 +166,7 @@ export function sync() {
   busy = run().then(() => setStatus(st.on ? 'ok' : 'off'), e => {
     if (!st.on || e === STOPPED) setStatus(st.on ? status : 'off');
     else if (e?.auth) setStatus('tap');
+    else if (e === FULL) setStatus('error', 'This browser’s storage is full, so what came from Google Drive couldn’t be saved here. Make room by taking out recipes you don’t need.');
     else if (e?.bad) setStatus('error', 'The recipe file in your Drive isn’t readable, so From Scratch left it alone. Save a backup here, then remove that file from Drive to start it fresh.');
     else if (e === RETRY) setStatus('error', 'Another device kept saving. Try again in a moment.');
     else setStatus('error', 'Couldn’t reach Google Drive. Check the connection and try again.');
@@ -307,7 +309,7 @@ function watch(f) { watchers.add(f); f(); }
 export const syncState = () => ({ ...st, status, note });
 
 export function initSync() {
-  box.onChange(why => { if (why !== 'sync' && why !== 'storage') changed(); });
+  box.onChange(why => { if (why !== 'sync' && why !== 'storage' && why !== 'full') changed(); });
   if (!available()) return;
   if (st.on) {
     loadGis(); // ready before the first tap

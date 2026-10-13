@@ -11,6 +11,7 @@ function read() {
 
 let state = read();
 let seq = 0; // counts saves made on this page, so a sync can tell if something changed while it ran
+let full = false; // the last change couldn't be saved: this browser's storage is full
 const listeners = new Set();
 
 function write() {
@@ -18,54 +19,80 @@ function write() {
 }
 const emit = why => listeners.forEach(fn => { try { fn(why); } catch (e) { console.error(e); } });
 
+// Takes the new box only if it can be saved. Otherwise the box stays as it was, so the page never shows
+// something that's gone after a reload, and listeners hear 'full' (unless quiet).
+function commit(next, quiet = false) {
+  const prev = state;
+  state = next;
+  if (write()) return true;
+  state = prev;
+  full = true;
+  if (!quiet) emit('full');
+  return false;
+}
+
+function putOne(r, why) {
+  const prev = state.recipes[r.id];
+  const clean = cleanRecipe({ ...r, t: Math.max(Date.now(), (prev?.t || 0) + 1) });
+  if (!clean || !commit({ recipes: { ...state.recipes, [clean.id]: clean } })) return null;
+  seq++;
+  emit(why);
+  return clean;
+}
+
 export const box = {
   get state() { return state; },
   get seq() { return seq; },
+  // True when the last change couldn't be saved because this browser's storage is full.
+  get full() { return full; },
   all: () => live(state).sort(byTitle),
   get: id => (state.recipes[id] && !state.recipes[id].del ? state.recipes[id] : null),
   has: id => !!state.recipes[id],
-  // Saves a recipe, stamping it with a change time later than any it had.
+  // Saves a recipe, stamping it with a change time later than any it had. Null if it couldn't be saved.
   put(r, why = 'local') {
-    const prev = state.recipes[r.id];
-    const clean = cleanRecipe({ ...r, t: Math.max(Date.now(), (prev?.t || 0) + 1) });
-    if (!clean) return null;
-    state = { recipes: { ...state.recipes, [clean.id]: clean } };
-    if (!write()) emit('full');
-    seq++;
-    emit(why);
-    return clean;
+    full = false;
+    return putOne(r, why);
   },
+  // Takes a recipe out, leaving a removal marker. Returns the recipe as it was, or nothing if it couldn't.
   remove(id) {
+    full = false;
     const prev = state.recipes[id];
     if (!prev || prev.del) return;
-    state = { recipes: { ...state.recipes, [id]: { id, t: Math.max(Date.now(), prev.t + 1), del: 1 } } };
-    write();
+    if (!commit({ recipes: { ...state.recipes, [id]: { id, t: Math.max(Date.now(), prev.t + 1), del: 1 } } })) return;
     seq++;
     emit('local');
     return prev;
   },
   // Adds recipes from a link or file. A recipe already here (same id) is left alone unless replace is set.
   add(recipes, { replace = false } = {}) {
+    full = false;
     const added = [];
     for (const r of recipes) {
       if (box.get(r.id) && !replace) continue;
-      added.push(box.put(r, 'quiet'));
+      added.push(putOne(r, 'quiet'));
     }
-    if (added.length) emit('local');
+    if (added.some(Boolean)) emit('local');
     return added.filter(Boolean);
   },
-  // Merges another box in (a backup, or the Drive copy). Returns the number of recipes that changed here.
+  // Merges another box in (a backup, or the Drive copy). Returns the number of recipes that changed here,
+  // or null if they couldn't be saved.
   merge(other, why = 'merge') {
+    full = false;
     const merged = mergeBoxes(state, other);
     const changed = Object.keys(merged.recipes).filter(id => canon(merged.recipes[id]) !== canon(state.recipes[id])).length;
-    if (changed) { state = merged; write(); seq++; emit(why); }
+    if (changed) {
+      if (!commit(merged)) return null;
+      seq++;
+      emit(why);
+    }
     return changed;
   },
-  // Replaces the box with one that already includes everything here (after a sync).
+  // Replaces the box with one that already includes everything here (after a sync). False if it couldn't be
+  // saved; the sync says so itself.
   replace(next, why = 'sync') {
-    if (canon(next) === canon(state)) return false;
-    state = next;
-    write();
+    full = false;
+    if (canon(next) === canon(state)) return true;
+    if (!commit(next, true)) return false;
     emit(why);
     return true;
   },

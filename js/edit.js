@@ -111,7 +111,8 @@ export function editPage(r) {
         added: r?.added || today(),
         sample: 0,
       });
-      if (!saved) { toast('That couldn’t be saved'); return; }
+      // Storage full: the form keeps what was typed, but the draft can't be kept either, so say so.
+      if (!saved) { toast(box.full ? 'This browser’s storage is full, so the recipe wasn’t saved. Copy what you typed somewhere safe before you leave this page.' : 'That couldn’t be saved', null, 10000); return; }
       try {
         if (pendingPhoto) await photos.set(saved.id, pendingPhoto);
         else if (dropPhoto) await photos.remove(saved.id);

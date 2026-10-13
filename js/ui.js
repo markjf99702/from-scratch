@@ -21,13 +21,13 @@ for (const type of ['click', 'input', 'change', 'keydown', 'submit', 'pointerdow
 }
 
 let toastTimer;
-export function toast(message, action) {
+export function toast(message, action, ms = action ? 6500 : 3000) {
   const el = $('toast');
   el.innerHTML = `<span>${esc(message)}</span>${action ? `<button type="button">${esc(action.label)}</button>` : ''}`;
   el.hidden = false;
   if (action) el.querySelector('button').onclick = () => { el.hidden = true; action.run(); };
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { el.hidden = true; }, action ? 6500 : 3000);
+  toastTimer = setTimeout(() => { el.hidden = true; }, ms);
 }
 
 // The sheet that slides up (scale, share, print, confirmations). bind() wires up what's inside once it's drawn.

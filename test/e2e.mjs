@@ -403,6 +403,28 @@ assert.match(await page.locator('.rtitle').innerText(), /Chili/);
 await mark.ctx.setOffline(false);
 await mark.ctx.close();
 
+// ---------- a full browser ----------
+// Every tool at junkdrawer.works/REPO/ shares localStorage. When it's full, a recipe that couldn't be saved isn't
+// reported as added, and the form keeps what was typed.
+const crowded = await device({ sw: false });
+await crowded.page.goto(base + '#/new');
+await crowded.page.evaluate(() => {
+  let n = 0;
+  for (let size = 1 << 20; size >= 1; size >>= 1) {
+    const v = 'x'.repeat(size);
+    try { for (;;) localStorage.setItem('other-tool.' + n++, v); } catch { /* next size down */ }
+  }
+});
+await crowded.page.fill('input[name="title"]', 'Aunt Ruth’s Rhubarb Crisp');
+await crowded.page.fill('textarea[name="ingredients"]', '4 cups rhubarb');
+await crowded.page.click('button[type="submit"]');
+assert.match(await crowded.page.locator('#toast').innerText(), /storage is full, so the recipe wasn’t saved/);
+assert.equal(await crowded.page.inputValue('input[name="title"]'), 'Aunt Ruth’s Rhubarb Crisp', 'the form keeps it');
+await crowded.page.reload();
+await crowded.page.goto(base + '#/');
+await crowded.page.locator('text=Your recipe box is empty').waitFor();
+await crowded.ctx.close();
+
 // ---------- Google Drive ----------
 // Two devices share one fake Drive. The page only offers Drive at junkdrawer.works, so it's told this address is fine too.
 const g = fakeGoogle();

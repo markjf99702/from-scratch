@@ -136,7 +136,7 @@ async function homeClick(e) {
   if (!t) return;
   if (t.dataset.tag !== undefined) { ui.tag = t.dataset.tag; home(); return; }
   if (t.dataset.act === 'clear') { ui.q = ''; ui.tag = ''; home(); }
-  if (t.dataset.act === 'samples') { await addSamples(); home(); toast('Added five sample recipes'); }
+  if (t.dataset.act === 'samples') { await addSamples(); home(); if (!box.full) toast('Added five sample recipes'); }
   if (t.dataset.act === 'unsample') removeSamples();
 }
 
@@ -153,9 +153,11 @@ export async function addSamples() {
 }
 
 function removeSamples() {
-  const gone = box.all().filter(r => r.sample);
-  gone.forEach(r => { box.remove(r.id); photos.remove(r.id); });
+  const samples = box.all().filter(r => r.sample);
+  const gone = samples.filter(r => box.remove(r.id));
+  gone.forEach(r => photos.remove(r.id));
   if (route === '' || route === '/') home(); else router();
+  if (!gone.length || gone.length < samples.length) return; // storage full, and the store has said so
   toast(`Took out ${plural(gone.length, 'sample recipe')}`, { label: 'Undo', run: () => { box.add(gone, { replace: true }); addSamples().then(() => router()); } });
 }
 
@@ -275,6 +277,8 @@ function showIncoming(got) {
       if (!e.target.closest('[data-act="add"]')) return;
       const picked = rows.filter(x => x.on).map(x => ({ ...x.r, added: today() }));
       const added = box.add(picked, { replace: true });
+      // Storage full: stay here, showing which ones did go in; the store has said why.
+      if (added.length < picked.length) { showIncoming(got); return; }
       toast(added.length === 1 ? `Added “${added[0].title}”` : `Added ${plural(added.length, 'recipe')}`);
       if (added.length === 1) go('/r/' + added[0].id, true); else go('/', true);
     },
@@ -327,7 +331,7 @@ function settingsPage() {
       if (!b) return;
       if (b.dataset.units) { prefs.set('units', b.dataset.units); ui.units = null; settingsPage(); return; }
       if (b.dataset.act === 'backup') await saveBackup($('withPhotos')?.checked);
-      if (b.dataset.act === 'samples') { await addSamples(); settingsPage(); toast('Added five sample recipes'); }
+      if (b.dataset.act === 'samples') { await addSamples(); settingsPage(); if (!box.full) toast('Added five sample recipes'); }
       if (b.dataset.act === 'unsample') { removeSamples(); settingsPage(); }
       if (b.dataset.act === 'erase') eraseAll();
     },
@@ -360,6 +364,7 @@ async function saveBackup(withPhotos) {
 
 async function restoreBackup(got) {
   const changed = box.merge(got.box, 'local');
+  if (changed == null) return; // storage full, and the store has said so
   let pics = 0;
   for (const [id, url] of Object.entries(got.photos || {})) {
     if (await photos.get(id)) continue;
@@ -394,7 +399,9 @@ function eraseAll() {
 }
 
 // ---------- keeping the page in step with storage ----------
+const FULL = 'This browser’s storage is full, so that wasn’t saved. Save a backup in Settings, then make room by taking out recipes you don’t need.';
 box.onChange(why => {
+  if (why === 'full') { toast(FULL, null, 10000); return; }
   if (why === 'quiet') return;
   // Recipes that were the same on two devices collapse into one: bring along this device's photo.
   for (const r of Object.values(box.state.recipes)) if (r.del && r.to && !moved.has(r.id)) { moved.add(r.id); photos.move(r.id, r.to); }

@@ -526,6 +526,50 @@ test('a box cleans every recipe and keeps the newest of duplicates', () => {
   assert.equal(b.recipes.a.title, 'Three');
 });
 
+// localStorage is shared by every tool at junkdrawer.works/REPO/, so it can fill up. A change that can't be saved
+// must not look saved: the box stays as it was, and the page hears 'full' to say so.
+test('a change that can’t be saved leaves the box as it was', async () => {
+  const data = new Map();
+  let room = Infinity;
+  globalThis.localStorage = {
+    getItem: k => (data.has(k) ? data.get(k) : null),
+    setItem(k, v) {
+      const others = [...data].reduce((n, [key, val]) => n + (key === k ? 0 : key.length + val.length), 0);
+      if (others + k.length + String(v).length > room) throw Object.assign(new Error('full'), { name: 'QuotaExceededError' });
+      data.set(k, String(v));
+    },
+    removeItem: k => data.delete(k),
+  };
+  try {
+    const { box, KEY } = await import('../js/store.js');
+    const heard = [];
+    box.onChange(why => heard.push(why));
+    const pie = box.put({ id: 'r-pie', title: 'Apple Pie', ingredients: ['6 apples'] });
+    assert.ok(pie && !box.full);
+    room = 0; // nothing more fits
+    const seq = box.seq, before = canon(box.state);
+    assert.equal(box.put({ id: 'r-crisp', title: 'Aunt Ruth’s Rhubarb Crisp' }), null, 'not saved, so not returned');
+    assert.ok(box.full);
+    assert.equal(box.get('r-crisp'), null, 'and not shown either');
+    assert.equal(box.remove('r-pie'), undefined);
+    assert.ok(box.get('r-pie'), 'a removal that couldn’t be saved leaves the recipe');
+    assert.deepEqual(box.add([{ id: 'r-a', title: 'A' }, { id: 'r-b', title: 'B' }]), []);
+    assert.equal(box.merge({ recipes: { 'r-c': { id: 'r-c', t: 5, title: 'C' } } }), null);
+    heard.length = 0;
+    assert.equal(box.replace({ recipes: {} }), false, 'a sync’s copy that couldn’t be saved');
+    assert.deepEqual(heard, [], 'the sync says so itself');
+    assert.equal(canon(box.state), before, 'the box is as it was');
+    assert.equal(box.seq, seq);
+    assert.equal(canon(JSON.parse(data.get(KEY))), before, 'and so is what a reload reads');
+    room = Infinity;
+    assert.ok(box.put({ id: 'r-crisp', title: 'Aunt Ruth’s Rhubarb Crisp' }));
+    assert.ok(!box.full);
+    assert.ok(heard.includes('local'));
+  } finally {
+    delete globalThis.localStorage;
+  }
+});
+
 // ---------- links ----------
 test('links pack and unpack, compressed', async () => {
   const r = cleanRecipe({ ...SAMPLES[0], t: 99 });

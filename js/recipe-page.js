@@ -123,7 +123,7 @@ function click(e, r) {
   if (act === 'scale') scaleSheet(r);
   if (act === 'unscale') { delete ui.scale[r.id]; rerenderRecipe(r); }
   if (act === 'untick') { tickedOf(r.id).clear(); rerenderRecipe(r); }
-  if (act === 'checked') { box.put({ ...r, check: '' }); rerenderRecipe(box.get(r.id)); toast('Marked as checked'); }
+  if (act === 'checked') { if (!box.put({ ...r, check: '' })) return; rerenderRecipe(box.get(r.id)); toast('Marked as checked'); }
   if (act === 'share') shareSheet(r);
   if (act === 'print') printSheet(r);
   if (act === 'remove') removeSheet(r);
@@ -263,10 +263,10 @@ function removeSheet(r) {
       close();
       if (a !== 'yes') return;
       const photo = await photos.get(r.id);
-      box.remove(r.id);
+      if (!box.remove(r.id)) return;
       await photos.remove(r.id);
       go('/', true);
-      toast(`Removed “${r.title}”`, { label: 'Undo', run: async () => { box.put(r); if (photo) await photos.set(r.id, photo); go('/r/' + r.id); } });
+      toast(`Removed “${r.title}”`, { label: 'Undo', run: async () => { if (!box.put(r)) return; if (photo) await photos.set(r.id, photo); go('/r/' + r.id); } });
     });
   });
 }
