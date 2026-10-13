@@ -199,6 +199,14 @@ for (const [field, value] of [['#fIn', '0'], ['#fIn', '-2'], ['#fIn', 'abc'], ['
 }
 assert.equal(await page.locator('.scaled').count(), 0, 'nothing was scaled');
 assert.equal(await page.evaluate(() => !!document.getElementById('toast').closest('dialog')), false, 'the toast comes out of the sheet when it closes');
+// Picking an ingredient under "I have", with no amount there, leaves a scale typed above as it is.
+await page.click('[data-act="scale"]');
+await page.fill('#fIn', '1.5');
+await page.selectOption('#hSel', { index: 1 });
+await page.click('[data-a="apply"]');
+await page.locator('.scaled').waitFor();
+assert.match(await page.locator('.scaled').innerText(), /One and a half times/);
+await page.click('[data-act="unscale"]');
 
 // By servings: Uncle Walt's chili for 12 instead of 6.
 await page.goto(base + '#/r/sample-walt-chili');

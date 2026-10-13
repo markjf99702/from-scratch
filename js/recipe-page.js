@@ -179,8 +179,10 @@ function scaleSheet(r) {
     };
     haveNote();
     let used = null;
-    body.addEventListener('input', e => { used = e.target.id; if (e.target.id === 'hIn') haveNote(); });
-    body.addEventListener('change', e => { if (e.target.id === 'hSel') { used = 'hIn'; haveNote(); } });
+    // Picking an ingredient under "I have" only counts once there's an amount beside it, so it doesn't undo a
+    // scale typed above.
+    body.addEventListener('input', e => { if (e.target.id === 'hSel') return; used = e.target.id; if (e.target.id === 'hIn') haveNote(); });
+    body.addEventListener('change', e => { if (e.target.id === 'hSel') { if ($('hIn').value.trim()) used = 'hIn'; haveNote(); } });
     const apply = () => {
       // The field last typed in decides, or else one with something in it (Serves always has its number).
       const id = used || ($('hIn')?.value.trim() ? 'hIn' : $('fIn').value.trim() ? 'fIn' : null);
