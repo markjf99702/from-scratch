@@ -113,6 +113,28 @@ test('compound amounts and alternatives in brackets', () => {
   assert.equal(parseLine('2 cups chopped walnuts (optional)').note, 'optional');
 });
 
+test('a second amount after the item scales and converts with the line', () => {
+  const x2 = { factor: 2 }, m = { mode: 'metric' };
+  assert.equal(show('1/2 cup butter (1 stick), melted'), '½ cup butter (1 stick), melted', 'it stays where the card put it');
+  assert.equal(show('1/2 cup butter (1 stick), melted', x2), '1 cup butter (2 sticks), melted');
+  assert.equal(show('1/2 cup butter (1 stick), melted', { factor: 0.5 }), '¼ cup butter (½ stick), melted');
+  assert.equal(show('1 cup milk (240 ml)', x2), '2 cups milk (480 ml)');
+  assert.equal(show('1 cup milk (240 ml)', m), '235 ml milk', 'converted, so the card’s other amount drops out');
+  assert.equal(show('2 1/4 cups all-purpose flour (280g)', x2), '4½ cups all-purpose flour (560 g)');
+  assert.equal(show('2 1/4 cups all-purpose flour (280g)', m), '281 g all-purpose flour');
+  assert.equal(show('2 cups flour (250g), sifted', x2), '4 cups flour (500 g), sifted');
+  assert.equal(show('200g/7oz plain flour', x2), '400 g (14 oz) plain flour');
+  assert.equal(show('200g/7oz plain flour', { mode: 'us' }), '1⅔ cups plain flour');
+  assert.deepEqual(parseLine('200g/7oz plain flour').alt, { q: 7, q2: null, u: 'oz' });
+  assert.deepEqual(pick(parseLine('1 can crushed tomatoes (28 oz)')), { q: 1, u: 'can', size: { q: 28, u: 'oz' }, item: 'crushed tomatoes' });
+  assert.equal(show('1 can crushed tomatoes (28 oz)', m), '1 can crushed tomatoes (795 g)', 'the same as “1 can (28 oz) crushed tomatoes”');
+  assert.equal(show('2 cans tomatoes (15 oz each)', x2), '4 cans tomatoes (15 oz each)');
+  // Brackets that aren't only an amount stay notes.
+  assert.equal(parseLine('2 eggs (50 g each)').note, '50 g each', 'each egg, so not scaled');
+  assert.equal(parseLine('Butter (1 stick)').note, '1 stick', 'no amount on the line to go with');
+  assert.equal(show('1 (15 oz) can tomatoes (undrained)'), '1 can tomatoes (15 oz), undrained');
+});
+
 test('section headings', () => {
   assert.equal(headingOf('For the glaze:'), 'For the glaze');
   assert.equal(headingOf('For the crumb topping'), 'For the crumb topping');

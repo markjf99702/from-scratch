@@ -74,6 +74,16 @@ function readAmount(s) {
   return { q: a.v, q2, len, article: a.article, word: a.word };
 }
 
+// An amount with a measuring unit at the start of s: "7oz", "1 stick", "240 ml", "1/2 lb".
+function readMeasure(s) {
+  const b = readAmount(s);
+  if (!b || b.article) return null;
+  const gap = /^\s*/.exec(s.slice(b.len))[0];
+  const u = readUnit(s.slice(b.len + gap.length));
+  if (!u || !isMeasure(u.key)) return null;
+  return { q: b.q, q2: b.q2, u: u.key, len: b.len + gap.length + u.len };
+}
+
 // "15 oz" or "15-ounce" (the size of a can or package).
 function readSize(s) {
   const n = readNumber(s);
@@ -168,6 +178,11 @@ export function parseLine(line) {
           }
         }
       }
+      // "200g/7oz flour": the same amount again, after a slash
+      if ((m = /^\/\s*/.exec(rest)) && !out.q2) {
+        const b = readMeasure(rest.slice(m[0].length));
+        if (b) { out.alt = { q: b.q, q2: b.q2, u: b.u }; rest = rest.slice(m[0].length + b.len).replace(/^\s+/, ''); }
+      }
       // "1 can (15 oz) beans", or "1 cup (2 sticks) butter"
       if ((m = /^\(\s*([^)]*?)\s*\)\s*/.exec(rest))) {
         const inner = m[1];
@@ -189,7 +204,18 @@ export function parseLine(line) {
   let item = s, note = '';
   const split = topLevelSplit(item);
   if (split) { item = split[0]; note = split[1]; }
-  if ((m = /\s*\(([^()]*)\)\s*$/.exec(item)) && m.index > 0) { note = note ? m[1] + ', ' + note : m[1]; item = item.slice(0, m.index); }
+  if ((m = /\s*\(([^()]*)\)\s*$/.exec(item)) && m.index > 0) {
+    // A bracket at the end that is only an amount scales with the line: "butter (1 stick)", "milk (240 ml)", or the
+    // size of a can, "crushed tomatoes (28 oz)". It stays after the item, where the card put it.
+    const inner = m[1].trim(), box = isContainer(out.u);
+    const sz = box ? inner.replace(/\s+each\.?$/i, '') : inner;
+    const b = out.q != null ? readMeasure(sz) : null;
+    const whole = b && b.len >= sz.replace(/\.$/, '').length;
+    if (whole && box && !out.size && b.q2 == null) out.size = { q: b.q, u: b.u };
+    else if (whole && !box && !out.alt) out.alt = { q: b.q, q2: b.q2, u: b.u, end: true };
+    else note = note ? m[1] + ', ' + note : m[1];
+    item = item.slice(0, m.index);
+  }
   if ((m = /\s+(to taste|as needed|if needed|optional|for serving|for garnish|or to taste)$/i.exec(item)) && m.index > 0) { note = note ? m[1] + ', ' + note : m[1]; item = item.slice(0, m.index); }
   if (out.note) note = note ? out.note + ', ' + note : out.note;
   out.item = item.trim().replace(/^of\s+/i, '');
@@ -439,7 +465,7 @@ export function present(p, { factor = 1, mode = 'as' } = {}) {
   if (text[1]) out.more = text.slice(1).map(t => `${t.qty} ${t.unit}`).join(' + ');
   if (p.size) out.size = sizeText(p.size, mode);
   if (['pinch', 'dash', 'handful'].includes(parts[0].u)) out.of = true;
-  if (p.alt && !conv) out.alt = altText(p.alt, factor);
+  if (p.alt && !conv) { out.alt = altText(p.alt, factor); if (p.alt.end) out.altEnd = true; }
   if (!p.u && !pAmbiguousCount(p)) {
     const n = q2 != null ? q2 : q;
     out.item = recount(p.item, n);
@@ -508,10 +534,11 @@ export function lineText(v) {
   if (!v) return '';
   if (v.h) return v.h;
   const amount = amountWords(v);
-  const alt = v.alt ? `(${v.alt})` : '';
+  const alt = v.alt && !v.altEnd ? `(${v.alt})` : '';
   let head;
   if (v.pre) head = [v.pre, amount, v.item].filter(Boolean).join(' ');
   else head = [amount, alt, v.item].filter(Boolean).join(' ');
+  if (v.alt && v.altEnd) head += ` (${v.alt})`;
   if (v.size) head += ` (${/s$/.test(v.unit) ? v.size + ' each' : v.size})`;
   const note = [v.note, v.hint].filter(Boolean).join('; ');
   return head + (note ? ', ' + note : '');

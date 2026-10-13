@@ -29,10 +29,11 @@ export function ingredientHTML(v) {
       (v.unit ? ' ' + esc(v.unit) : '') + (v.more ? ' + ' + amountHTML(v.more) : '') + conv;
   }
   const lead = !v.qty && v.pre ? esc(v.pre) + ' ' : '';
-  const alt = v.alt ? `<span class="alt">(${amountHTML(v.alt)})</span> ` : '';
+  const alt = v.alt && !v.altEnd ? `<span class="alt">(${amountHTML(v.alt)})</span> ` : '';
+  const altEnd = v.alt && v.altEnd ? ` <span class="alt">(${amountHTML(v.alt)})</span>` : '';
   const note = [v.note, v.hint].filter(Boolean).map(esc).join('; ');
   const size = v.size ? ` <span class="size">(${amountHTML(sizeWords(v))})</span>` : '';
-  return `<span class="amt">${amount}</span><span class="what">${lead}${alt}${v.of ? '<span class="of">of </span>' : ''}${esc(v.item)}${size}${note ? `<span class="note">, ${note}</span>` : ''}</span>`;
+  return `<span class="amt">${amount}</span><span class="what">${lead}${alt}${v.of ? '<span class="of">of </span>' : ''}${esc(v.item)}${altEnd}${size}${note ? `<span class="note">, ${note}</span>` : ''}</span>`;
 }
 
 // "Serves 9 · Prep 20 min · Cook 40 min", each part kept on one line.
