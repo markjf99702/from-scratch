@@ -123,7 +123,16 @@ test('a second amount after the item scales and converts with the line', () => {
   assert.equal(show('6 tbsp butter (3/8 cup)'), '6 tbsp butter (⅜ cup)');
   assert.equal(show('2 T. flour (1/8 cup)'), '2 tbsp flour (⅛ cup)');
   assert.equal(show('2 T. (1/8 cup) flour'), '2 tbsp (⅛ cup) flour');
-  assert.equal(show('6 tbsp butter (3/8 cup)', x2), '¾ cup butter (¾ cup)');
+  // Scaled, it goes when it would only repeat the first amount, or when its unit's fractions can't say it closely:
+  // half of ⅛ cup is a tablespoon, not the ¼ cup that rounding gives.
+  assert.equal(show('6 tbsp butter (3/8 cup)', x2), '¾ cup butter');
+  assert.equal(show('2 T. flour (1/8 cup)', { factor: 0.5 }), '1 tbsp flour');
+  assert.equal(show('2 T. (1/8 cup) flour', { factor: 0.5 }), '1 tbsp flour');
+  assert.equal(show('6 tbsp butter (3/8 cup)', { factor: 0.5 }), '3 tbsp butter');
+  assert.equal(show('1 tbsp sugar (1/16 cup)', x2), '2 tbsp sugar');
+  assert.equal(show('1 qt milk (4 cups)', x2), '8 cups milk');
+  assert.equal(show('1/2 cup butter (1 stick), melted', { factor: 0.25 }), '2 tbsp butter (¼ stick), melted');
+  assert.equal(show('1 tsp salt (6 g)', { factor: 0.25 }), '¼ tsp salt (1.5 g)');
   assert.equal(show('1 cup milk (240 ml)', x2), '2 cups milk (480 ml)');
   assert.equal(show('1 cup milk (240 ml)', m), '235 ml milk', 'converted, so the card’s other amount drops out');
   assert.equal(show('2 1/4 cups all-purpose flour (280g)', x2), '4½ cups all-purpose flour (560 g)');

@@ -466,7 +466,11 @@ export function present(p, { factor = 1, mode = 'as' } = {}) {
   if (text[1]) out.more = text.slice(1).map(t => `${t.qty} ${t.unit}`).join(' + ');
   if (p.size) out.size = sizeText(p.size, mode);
   if (['pinch', 'dash', 'handful'].includes(parts[0].u)) out.of = true;
-  if (p.alt && !conv) { out.alt = altText(p.alt, factor, !scaled); if (p.alt.end) out.altEnd = true; }
+  // The card's other amount, unless it now says the same as the first ("¾ cup sugar (¾ cup)").
+  if (p.alt && !conv && !(parts.length === 1 && parts[0].u === p.alt.u)) {
+    const alt = altText(p.alt, factor, !scaled);
+    if (alt) { out.alt = alt; if (p.alt.end) out.altEnd = true; }
+  }
   if (!p.u && !pAmbiguousCount(p)) {
     // The card's own word stays ("8 jumbo shrimp", "6 Eier"). Only a scale that takes the count across one
     // changes it, and only its last word: 1 egg → 2 eggs, 2 eggs → 1 egg.
@@ -525,10 +529,14 @@ function sizeText(size, mode) {
 }
 
 // The card's other amount, "(1 stick)" or "(240 ml)". At the card's own amounts it's the card's own figure, so
-// "(3/8 cup)" isn't rounded to ⅓; scaled, it's in that unit's usual fractions.
+// "(3/8 cup)" isn't rounded to ⅓. Scaled, it's in that unit's usual fractions, or left out ('') when they can't
+// say it closely: half of ⅛ cup is a tablespoon, not ¼ cup.
 function altText(alt, factor, exact = false) {
   const q = alt.q * factor, q2 = alt.q2 == null ? null : alt.q2 * factor;
-  return `${amountText(q, alt.u, exact)}${q2 != null ? '–' + amountText(q2, alt.u, exact) : ''} ${unitWord(alt.u, (q2 ?? q) > 1 ? 2 : 1)}`;
+  const text = x => amountText(x, alt.u, exact);
+  const off = x => Math.abs(readNumber(normalize(text(x)))?.v - x) > x * 0.1;
+  if (!exact && (off(q) || (q2 != null && off(q2)))) return '';
+  return `${text(q)}${q2 != null ? '–' + text(q2) : ''} ${unitWord(alt.u, (q2 ?? q) > 1 ? 2 : 1)}`;
 }
 
 // The shown line as plain text, for printing, copying and tests: "1½ cups all-purpose flour, sifted".
