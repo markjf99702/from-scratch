@@ -504,6 +504,8 @@ textarea.hand-input { font: 500 23px/1.25 var(--hand); color: var(--pen); }
 /* Timers take the bottom, so the toast shows near the top: under the lid, or under cook mode's top bar, clear of their buttons. */
 body.has-timers .toast { top: calc(76px + env(safe-area-inset-top)); bottom: auto; }
 body.cooking.has-timers .toast { top: calc(74px + env(safe-area-inset-top)); }
+/* Over an open sheet, near the top: a sheet's buttons are at its foot. */
+.sheet .toast { top: calc(12px + env(safe-area-inset-top)); bottom: auto; }
 .nw, .meta .item { white-space: nowrap; }
 .timers {
   position: fixed; left: 50%; bottom: calc(10px + env(safe-area-inset-bottom)); transform: translateX(-50%);

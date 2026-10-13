@@ -193,10 +193,12 @@ for (const [field, value] of [['#fIn', '0'], ['#fIn', '-2'], ['#fIn', 'abc'], ['
   await page.click('[data-a="apply"]');
   assert.equal(await page.locator('#toast').isVisible(), true, `${field} ${value} says so`);
   assert.match(await page.locator('#toast').innerText(), /That amount won’t work/);
+  assert.ok(await uncovered(page, '#toast'), `the message about ${value} shows over the sheet, not behind it`);
   assert.equal(await page.evaluate(() => document.getElementById('sheet').open), true, `the sheet stays open for ${value}`);
   await page.keyboard.press('Escape');
 }
 assert.equal(await page.locator('.scaled').count(), 0, 'nothing was scaled');
+assert.equal(await page.evaluate(() => !!document.getElementById('toast').closest('dialog')), false, 'the toast comes out of the sheet when it closes');
 
 // By servings: Uncle Walt's chili for 12 instead of 6.
 await page.goto(base + '#/r/sample-walt-chili');
