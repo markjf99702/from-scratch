@@ -219,6 +219,22 @@ await page.click('.timer [data-t="pause"]');
 assert.equal(await page.locator('.timer.paused').count(), 1);
 while (await page.locator('.timer').count()) await page.locator('.timer [data-t="cancel"]').first().click();
 
+// Keys in cook mode: Space presses the focused button, as everywhere else, and Escape leaves with nothing focused.
+await page.click('.cook-btn');
+await page.locator('.cook').waitFor();
+assert.match(await page.locator('.cook-kicker').innerText(), /Step 6 of 6/i);
+await page.focus('[data-go="-1"]');
+await page.keyboard.press(' ');
+assert.match(await page.locator('.cook-kicker').innerText(), /Step 5 of 6/i, 'Space on Back goes back');
+await page.focus('.cook-aa');
+await page.keyboard.press(' ');
+assert.equal(await page.getAttribute('.cook-aa', 'aria-pressed'), 'true', 'Space on Aa makes the text larger');
+assert.match(await page.locator('.cook-kicker').innerText(), /Step 5 of 6/i, 'and stays on the step');
+await page.click('.cook-aa');
+await page.evaluate(() => document.activeElement?.blur());
+await page.keyboard.press('Escape');
+await page.locator('.rtitle').waitFor();
+
 // ---------- typing one in ----------
 await page.goto(base + '#/new');
 await page.fill('input[name="title"]', 'Peanut Butter Fudge');

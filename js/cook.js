@@ -116,9 +116,7 @@ export function cookPage(r) {
     },
     keydown(e) {
       if (e.target.closest('input, textarea, select')) return;
-      if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); move(1); }
-      if (e.key === 'ArrowLeft') { e.preventDefault(); move(-1); }
-      if (e.key === 'Escape') go('/r/' + r.id);
+      keys(e, !!e.target.closest('button, a'));
     },
     // A sideways swipe moves between steps.
     pointerdown(e) { if (e.pointerType !== 'mouse') { startX = e.clientX; startY = e.clientY; } },
@@ -130,7 +128,14 @@ export function cookPage(r) {
     },
     pointercancel() { startX = null; },
   });
-  document.onkeydown = e => { if (document.body.classList.contains('cooking') && e.target === document.body) { if (e.key === 'ArrowRight') move(1); if (e.key === 'ArrowLeft') move(-1); } };
+  // The arrow keys move between steps and Escape leaves. Space is the next step too, unless a button or link has
+  // the focus: then it presses that, as it does everywhere else.
+  const keys = (e, control) => {
+    if (e.key === 'ArrowRight' || (e.key === ' ' && !control)) { e.preventDefault(); move(1); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); move(-1); }
+    if (e.key === 'Escape') go('/r/' + r.id);
+  };
+  document.onkeydown = e => { if (document.body.classList.contains('cooking') && e.target === document.body) keys(e, false); };
   draw();
   wake();
 }
