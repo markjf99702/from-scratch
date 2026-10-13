@@ -296,7 +296,8 @@ export function bestUS(ml, { single = false, spoons = false, loose = false } = {
   // A second spoon to count costs a little; converting from metric is approximate anyway, so it costs more there.
   const two = loose ? 0.06 : 0.035;
   if (!spoons && tsp >= 12 * 0.97) {
-    for (let w = 0; w <= Math.ceil(tsp / 48) + 1; w++) for (const f of CUPF) {
+    // Only the whole cups either side of the amount can win, so 20,000 cups doesn't try every cup up to it.
+    for (let w = Math.max(0, Math.floor(tsp / 48) - 1); w <= Math.ceil(tsp / 48) + 1; w++) for (const f of CUPF) {
       const c = w + f;
       if (c < 0.25) continue;
       add([{ q: c, u: 'cup' }], c * 48, 0);

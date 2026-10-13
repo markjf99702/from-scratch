@@ -200,6 +200,12 @@ test('scaling re-expresses amounts sensibly', () => {
   assert.equal(show('2–3 cloves garlic', { factor: 2 }), '4–6 cloves garlic');
 });
 
+test('a huge amount scales without a long wait', () => {
+  const t0 = performance.now();
+  assert.equal(show('20000 cups water', { factor: 1.5 }), '30000 cups water');
+  assert.ok(performance.now() - t0 < 1000, `took ${Math.round(performance.now() - t0)} ms`);
+});
+
 test('things counted without a unit become plural or singular', () => {
   assert.equal(show('1 onion', { factor: 2 }), '2 onions');
   assert.equal(show('1 bay leaf', { factor: 2 }), '2 bay leaves');
