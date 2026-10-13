@@ -12,7 +12,7 @@ function load() {
   try { const a = JSON.parse(localStorage.getItem(KEY) || '[]'); return Array.isArray(a) ? a.filter(t => t && t.id && t.secs > 0) : []; } catch { return []; }
 }
 let list = load();
-let audio = null, ringT = null, tickT = null, baseTitle = '';
+let audio = null, ringT = null, tickT = null, baseTitle = '', ringTitle = '';
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(list)); } catch { /* only for this visit */ } };
 const left = t => (t.paused ? t.left : (t.end - Date.now()) / 1000);
 
@@ -71,13 +71,16 @@ function ring() {
   if (!loud.length) { stopRinging(); return; }
   beep();
   try { navigator.vibrate?.([300, 120, 300, 120, 300]); } catch { /* no buzz here */ }
-  if (!baseTitle) baseTitle = document.title;
-  document.title = `Time’s up: ${loud[0].label}`;
+  // A screen drawn since the last ring has put up its own title: that's the one to go back to.
+  if (document.title !== ringTitle) baseTitle = document.title;
+  ringTitle = `Time’s up: ${loud[0].label}`;
+  document.title = ringTitle;
 }
 function stopRinging() {
   clearInterval(ringT);
   ringT = null;
-  if (baseTitle) { document.title = baseTitle; baseTitle = ''; }
+  if (ringTitle && document.title === ringTitle) document.title = baseTitle;
+  ringTitle = baseTitle = '';
 }
 
 function tick() {

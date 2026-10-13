@@ -202,8 +202,16 @@ assert.match(await page.locator('.timer.done').innerText(), /Bake: time’s up/)
 assert.match(await page.locator('.timer.done').innerText(), /The recipe says 35–40 min/);
 assert.ok(await page.evaluate(() => window.fromScratch.timers.rings > 0), 'it beeps');
 assert.ok(await page.evaluate(() => window.__buzz > 0), 'it buzzes');
+assert.match(await page.title(), /^Time’s up: Bake/, 'the tab says so');
+// Stopping it on another screen puts back that screen's title, not the recipe's.
+await page.goto(base + '#/');
+await page.clock.fastForward(2300);
+assert.match(await page.title(), /^Time’s up: Bake/);
 await page.click('.timer.done [data-t="cancel"]');
+await page.clock.fastForward(300);
 assert.equal(await page.locator('#timers').isHidden(), true);
+assert.equal(await page.title(), 'From Scratch');
+await page.goto(base + '#/r/sample-rosa-coffee-cake');
 
 // Cook mode: one step at a time, the screen kept on, and a timer that keeps going between steps.
 await page.click('.cook-btn');
