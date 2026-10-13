@@ -21,11 +21,15 @@ for (const type of ['click', 'input', 'change', 'keydown', 'submit', 'pointerdow
 }
 
 let toastTimer;
-export function toast(message, action, ms = action ? 6500 : 3000) {
+// An open sheet sits above everything else on the page, so the toast goes inside it to be seen, and back out, just
+// before it, once the sheet has closed.
+function placeToast() {
   const el = $('toast'), dlg = $('sheet');
-  // An open sheet sits above everything else on the page, so the toast goes inside it to be seen, and comes back out
-  // when the sheet closes.
-  if (dlg.open && el.parentElement !== dlg) dlg.append(el);
+  if (dlg.open) { if (el.parentElement !== dlg) dlg.append(el); } else if (el.parentElement === dlg) dlg.before(el);
+}
+export function toast(message, action, ms = action ? 6500 : 3000) {
+  const el = $('toast');
+  placeToast();
   el.innerHTML = `<span>${esc(message)}</span>${action ? `<button type="button">${esc(action.label)}</button>` : ''}`;
   el.hidden = false;
   if (action) el.querySelector('button').onclick = () => { el.hidden = true; action.run(); };
@@ -55,7 +59,7 @@ export function sheet(html, bind, label = '') {
 export const sheetOpen = () => $('sheet').open;
 // A tap on the dimmed page around the sheet closes it.
 $('sheet').addEventListener('click', e => { if (e.target === e.currentTarget) closeSheet(); });
-$('sheet').addEventListener('close', () => { const el = $('toast'); if (el.parentElement === $('sheet')) $('sheet').before(el); });
+$('sheet').addEventListener('close', placeToast);
 export function closeSheet() { const d = $('sheet'); if (d.open) { if (d.close) d.close(); else d.removeAttribute('open'); } }
 
 export async function copy(text, field) {

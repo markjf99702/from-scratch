@@ -198,7 +198,8 @@ for (const [field, value] of [['#fIn', '0'], ['#fIn', '-2'], ['#fIn', 'abc'], ['
   await page.keyboard.press('Escape');
 }
 assert.equal(await page.locator('.scaled').count(), 0, 'nothing was scaled');
-assert.equal(await page.evaluate(() => !!document.getElementById('toast').closest('dialog')), false, 'the toast comes out of the sheet when it closes');
+// The toast comes back out of the sheet when it has closed (its close event comes a moment after Escape).
+await page.waitForFunction(() => !document.getElementById('toast').closest('dialog'), null, { timeout: 5000, polling: 100 });
 // Picking an ingredient under "I have", with no amount there, leaves a scale typed above as it is.
 await page.click('[data-act="scale"]');
 await page.fill('#fIn', '1.5');
