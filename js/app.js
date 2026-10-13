@@ -409,15 +409,20 @@ box.onChange(why => {
 });
 const moved = new Set();
 
-// Synced or changed in another tab: draw the screen again from the new data, unless something is being typed.
+// Synced or changed in another tab: draw the screen again from the new data, unless something is being typed
+// or a sheet is open. Then it's drawn again when the sheet closes, so nothing acts on the old copy.
+let stale = false;
 function refresh() {
-  if (editing() || sheetOpen()) return;
+  if (editing() || sheetOpen()) { stale = true; return; }
+  stale = false;
   const [head, a, b] = route.split('/');
   if (head === 'r' && a && !b) return rerenderRecipe(box.get(a));
   if (head === 'r' && b === 'cook') return;
   if (!head && document.activeElement?.id === 'q') return drawList();
   if (!head || head === 'settings') router();
 }
+
+$('sheet').addEventListener('close', () => { if (stale) refresh(); });
 
 window.addEventListener('storage', e => {
   if (e.key === KEY) box.reload('storage');

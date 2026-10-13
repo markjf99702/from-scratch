@@ -531,6 +531,24 @@ await syncNow(A.page);
 await syncNow(B.page);
 await B.page.locator('.rtitle:has-text("Dutch Apple Pie")').waitFor({ timeout: 5000 });
 
+// A sync that lands while a sheet is open shows once it closes, and "It's right" keeps what the other device saved.
+await put(A.page, { ...(await A.page.evaluate(() => window.fromScratch.box.get('r-pie'))), check: 'the oven temperature is smudged' });
+await syncNow(A.page);
+await syncNow(B.page);
+await A.page.goto(base + '#/r/r-pie');
+await A.page.click('[data-act="share"]');
+await A.page.locator('#sheet[open]').waitFor();
+await put(B.page, { ...(await B.page.evaluate(() => window.fromScratch.box.get('r-pie'))), notes: 'Use Granny Smiths. B says cut them thick.' });
+await syncNow(B.page);
+const sheetSync = await synced(A.page);
+await A.page.evaluate(() => document.getElementById('cloud').click()); // what the minute's sync does, under the sheet
+await A.page.waitForFunction(b => window.fromScratch.sync().last > b && window.fromScratch.sync().status === 'ok', sheetSync, { timeout: 10000 });
+await A.page.keyboard.press('Escape');
+await A.page.locator('.note-card:has-text("B says cut them thick")').waitFor({ timeout: 5000 });
+await A.page.click('[data-act="checked"]');
+assert.equal(await A.page.evaluate(() => window.fromScratch.box.get('r-pie').notes), 'Use Granny Smiths. B says cut them thick.', 'It’s right didn’t write the old copy back');
+assert.equal(await A.page.evaluate(() => window.fromScratch.box.get('r-pie').check), undefined);
+
 // Another device saves between this device's read and its write: it reads again and merges, keeping both.
 let raced = false;
 await B.ctx.route(/googleapis\.com\/drive\/v3\/files\/[\w-]+\?alt=media/, async route => {

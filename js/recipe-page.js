@@ -123,7 +123,13 @@ function click(e, r) {
   if (act === 'scale') scaleSheet(r);
   if (act === 'unscale') { delete ui.scale[r.id]; rerenderRecipe(r); }
   if (act === 'untick') { tickedOf(r.id).clear(); rerenderRecipe(r); }
-  if (act === 'checked') { if (!box.put({ ...r, check: '' })) return; rerenderRecipe(box.get(r.id)); toast('Marked as checked'); }
+  if (act === 'checked') {
+    // The copy in the box, which a sync may have changed since this page was drawn.
+    const now = box.get(r.id);
+    if (!now || !box.put({ ...now, check: '' })) return;
+    rerenderRecipe(box.get(r.id));
+    toast('Marked as checked');
+  }
   if (act === 'share') shareSheet(r);
   if (act === 'print') printSheet(r);
   if (act === 'remove') removeSheet(r);
@@ -160,7 +166,7 @@ function scaleSheet(r) {
       if (!(x > 0) || x > 100) { toast('That amount won’t work. Try a number like 1½ or 2.'); return; }
       if (Math.abs(x - 1) < 1e-9) delete ui.scale[r.id]; else ui.scale[r.id] = x;
       close();
-      rerenderRecipe(r);
+      rerenderRecipe(box.get(r.id));
     };
     const haveNote = () => {
       const hn = $('hNote'), sel = $('hSel');
@@ -247,7 +253,7 @@ async function printSheet(r) {
       const withPhoto = paper !== 'card' && $('pPhoto')?.checked;
       const lines = $('pLines').checked;
       close();
-      await printRecipe(r, { paper, factor: f, mode: unitsFor(), photo: withPhoto ? await photos.get(r.id) : null, lines });
+      await printRecipe(box.get(r.id) || r, { paper, factor: f, mode: unitsFor(), photo: withPhoto ? await photos.get(r.id) : null, lines });
     });
   });
 }
@@ -263,10 +269,12 @@ function removeSheet(r) {
       close();
       if (a !== 'yes') return;
       const photo = await photos.get(r.id);
-      if (!box.remove(r.id)) return;
+      // Undo puts back the copy that was in the box, which a sync may have changed since this page was drawn.
+      const was = box.remove(r.id);
+      if (!was) return;
       await photos.remove(r.id);
       go('/', true);
-      toast(`Removed “${r.title}”`, { label: 'Undo', run: async () => { if (!box.put(r)) return; if (photo) await photos.set(r.id, photo); go('/r/' + r.id); } });
+      toast(`Removed “${was.title}”`, { label: 'Undo', run: async () => { if (!box.put(was)) return; if (photo) await photos.set(r.id, photo); go('/r/' + r.id); } });
     });
   });
 }
