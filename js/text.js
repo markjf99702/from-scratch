@@ -138,8 +138,15 @@ export function convertStep(step, mode) {
     const unit = lo >= 250 ? 'F' : 'C';
     temps.push({ start, end, lo, hi, unit, was: `${text.slice(start, end)}°${unit}` });
   }
+  // A temperature with its twin in the other unit right beside it ("350°F (175°C)", "350°F/180°C") is already
+  // in both, so both stay as written.
+  temps.sort((a, b) => a.start - b.start);
+  for (let i = 1; i < temps.length; i++) {
+    const a = temps[i - 1], b = temps[i];
+    if (a.unit !== b.unit && /^\s*(?:\(|\/|or)?\s*$/i.test(text.slice(a.end, b.start))) a.twin = b.twin = true;
+  }
   for (const t of temps) {
-    const h = tempHit(t.start, t.end, t.lo, t.hi, t.unit, mode, t.was);
+    const h = !t.twin && tempHit(t.start, t.end, t.lo, t.hi, t.unit, mode, t.was);
     if (h) hits.push(h);
   }
   if (mode === 'metric') {

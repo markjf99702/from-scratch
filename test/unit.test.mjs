@@ -359,6 +359,16 @@ test('an oven temperature range converts at both ends', () => {
   assert.equal(convertStep('slow oven (300–325°F)', 'metric').find(x => x.was).was, '300–325°F', 'the card’s words for both ends');
 });
 
+test('a temperature already given in both units stays as it is', () => {
+  const m = s => convertStep(s, 'metric').map(x => (x.was ? `[${x.text}]` : x.text)).join('');
+  const u = s => convertStep(s, 'us').map(x => (x.was ? `[${x.text}]` : x.text)).join('');
+  for (const s of ['Preheat the oven to 350°F (175°C).', 'Preheat to 350°F/180°C.', 'Heat to 350 degrees F (175 degrees C).', 'Bake at 180°C (350°F).', 'Preheat to 350 (180°C).', 'slow oven (300–325°F / 150–160°C)']) {
+    assert.equal(m(s), s, `grams: ${s}`);
+    assert.equal(u(s), s, `cups: ${s}`);
+  }
+  assert.equal(m('Bake at 350°F for 10 minutes, then at 400°F.'), 'Bake at [180°C] for 10 minutes, then at [200°C].', 'two of the same unit both convert');
+});
+
 test('each step lists the ingredients it uses', () => {
   const rosa = SAMPLES.find(r => r.id === 'sample-rosa-coffee-cake');
   const uses = stepIngredients(rosa.ingredients, rosa.steps).map(ix => ix.map(i => rosa.ingredients[i]));
