@@ -352,7 +352,7 @@ button.tag { cursor: pointer; }
 .scale-btn b { font-size: 17px; color: var(--tin); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme='light']) .scale-btn b, :root:not([data-theme='light']) .scale-btn svg { color: var(--accent); } }
 .scaled { background: var(--card-2); border-left: 4px solid var(--tin); border-radius: 4px; padding: 8px 12px; font-size: 15.5px; margin: 0 0 12px; }
-.sec-h { font-family: var(--display); font-weight: 650; font-size: 22px; margin: 20px 0 4px; }
+.recipe .sec-h { font-family: var(--display); font-weight: 650; font-size: 22px; margin: 20px 0 4px; }
 .ruled {
   line-height: var(--lh);
   background: repeating-linear-gradient(to bottom, transparent 0, transparent calc(var(--lh) - 6px), var(--rule) calc(var(--lh) - 6px), var(--rule) calc(var(--lh) - 5px), transparent calc(var(--lh) - 5px), transparent var(--lh));

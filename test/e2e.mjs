@@ -117,6 +117,7 @@ assert.equal(await ingredient(page, 0), '1 1⁄2 cups all-purpose flour'.replace
 await page.locator('#photoSec:not([hidden]) img').waitFor();
 assert.ok(await page.locator('#photoSec img').evaluate(img => img.complete && img.naturalWidth > 500), 'the photo of the card shows');
 await fits(page, 'a recipe');
+assert.equal(await page.locator('.steps-sec .sec-h').evaluate(h => getComputedStyle(h).marginTop), '20px', 'Steps has room above it, under Cook from this');
 
 // Tick one off.
 await page.click('.ing[data-i="1"] .tick');
