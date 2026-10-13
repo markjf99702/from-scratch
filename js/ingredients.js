@@ -516,7 +516,9 @@ function sizeText(size, mode) {
   }
   if (mode === 'us' && U.sys === 'metric') {
     const oz = U.kind === 'mass' ? size.q * U.g / UNITS.oz.g : size.q * U.ml / UNITS.floz.ml;
-    return `${amountText(round(oz, 0.5), 'oz')} ${U.kind === 'mass' ? 'oz' : 'fl oz'}`;
+    // A packet of yeast is about ¼ oz: quarters under an ounce, never 0.
+    const q = oz < 1 ? Math.max(0.25, round(oz, 0.25)) : round(oz, 0.5);
+    return `${amountText(q, 'oz')} ${U.kind === 'mass' ? 'oz' : 'fl oz'}`;
   }
   return `${amountText(size.q, size.u, true)} ${unitWord(size.u, size.q > 1 ? 2 : 1)}`;
 }

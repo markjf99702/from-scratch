@@ -274,6 +274,10 @@ test('metric to US', () => {
   assert.equal(show('500 g ground beef', u), '1 lb + 2 oz ground beef');
   assert.equal(show('200 g dark chocolate', u), '7 oz dark chocolate');
   assert.equal(show('1 cup sugar', u), '1 cup sugar', 'US stays as written');
+  assert.equal(show('1 packet (7 g) dry yeast', u), '1 packet dry yeast (¼ oz)', 'not (0 oz)');
+  assert.equal(show('1 packet (8 g) vanilla sugar', u), '1 packet vanilla sugar (¼ oz)', 'not (½ oz)');
+  assert.equal(show('1 sachet (5 ml) vanilla extract', u), '1 packet vanilla extract (¼ fl oz)');
+  assert.equal(show('1 can (400 g) tomatoes', u), '1 can tomatoes (14 oz)');
 });
 
 // ---------- steps ----------
