@@ -70,6 +70,7 @@ const fits = async (page, where) => assert.equal(await page.evaluate(() => docum
 const text = page => page.locator('main').innerText();
 // Nothing sits on top of it: the middle of the element is the element itself.
 const uncovered = (page, sel) => page.locator(sel).evaluate(el => { const r = el.getBoundingClientRect(); const hit = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2); return !!hit && el.contains(hit); });
+const overlaps = (page, a, b) => page.evaluate(([a, b]) => { const r = document.querySelector(a).getBoundingClientRect(), s = document.querySelector(b).getBoundingClientRect(); return r.left < s.right && s.left < r.right && r.top < s.bottom && s.top < r.bottom; }, [a, b]);
 const startTimer = page => page.evaluate(() => window.fromScratch.timers.start({ secs: 600, label: 'Rise', title: 'Rolls', recipe: 'x', step: 9 }));
 const stopTimers = page => page.evaluate(() => window.fromScratch.timers.all().forEach(t => window.fromScratch.timers.cancel(t.id)));
 const ingredient = (page, i) => page.locator(`.ing[data-i="${i}"]`).innerText().then(t => t.replace(/\s+/g, ' ').trim());
@@ -245,6 +246,8 @@ await fits(page, 'cook mode');
 for (let i = 0; i < 3; i++) await page.click('[data-go="1"]');
 assert.match(await page.locator('.cook-kicker').innerText(), /Step 5 of 6/i);
 await page.click('.cook-step .tm');
+assert.match(await page.locator('#toast').innerText(), /Timer started/);
+for (const b of ['.cook-x', '.cook-aa']) assert.equal(await overlaps(page, '#toast', b), false, `the toast is clear of ${b}`);
 await page.click('[data-go="1"]');
 assert.match(await page.locator('.cook-kicker').innerText(), /Step 6 of 6/i);
 assert.equal(await page.locator('.timer').count(), 1, 'the timer keeps going on the next step');
@@ -254,6 +257,9 @@ await page.click('.cook-x');
 await page.locator('.rtitle').waitFor();
 assert.equal(await page.evaluate(() => window.__released), 1, 'lets the screen sleep again');
 assert.equal(await page.locator('.timer').count(), 2, 'timers keep going after cook mode');
+await page.click('.steps .tm:has-text("15 minutes")');
+assert.match(await page.locator('#toast').innerText(), /Timer started/);
+assert.equal(await overlaps(page, '#toast', '.lid-btn.add'), false, 'the toast is clear of + Add');
 await page.click('.timer [data-t="pause"]');
 assert.equal(await page.locator('.timer.paused').count(), 1);
 while (await page.locator('.timer').count()) await page.locator('.timer [data-t="cancel"]').first().click();
