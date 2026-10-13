@@ -329,6 +329,15 @@ test('times written with fractions and words are read whole', () => {
   assert.deepEqual(t('Cut into 1/2-inch slices and bake 20 minutes.'), [['20 minutes', 1200, null]]);
 });
 
+test('a range whose ends have their own units is one timer', () => {
+  const t = s => findTimes(s).map(x => [x.text, x.secs, x.secs2]);
+  assert.deepEqual(t('Bake for 55 minutes to 1 hour.'), [['55 minutes to 1 hour', 3300, 3600]]);
+  assert.deepEqual(t('Bake 45 minutes to 1 hour, until a straw comes out clean.'), [['45 minutes to 1 hour', 2700, 3600]]);
+  assert.deepEqual(t('Simmer 1 hour to 1 hour 30 minutes.'), [['1 hour to 1 hour 30 minutes', 3600, 5400]]);
+  assert.equal(formatRange(3300, 3600), '55 min to 1 hr');
+  assert.deepEqual(t('Cook 5 minutes, then 10 minutes more.'), [['5 minutes', 300, null], ['10 minutes', 600, null]], 'two times in a row stay two');
+});
+
 test('oven temperatures and pan sizes in the chosen units', () => {
   const m = s => convertStep(s, 'metric').map(x => (x.was ? `[${x.text}]` : x.text)).join('');
   const u = s => convertStep(s, 'us').map(x => (x.was ? `[${x.text}]` : x.text)).join('');

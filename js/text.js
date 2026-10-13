@@ -43,7 +43,12 @@ export function findTimes(step) {
     if (g.part && !g.b) secs += Math.round(PARTS[g.part.toLowerCase().replace(/\s+/g, ' ')] * per);
     if (g.mins && !g.b && per === 3600) secs += Math.round(numValue(g.mins) * 60);
     if (!(secs > 0) || secs > 48 * 3600) continue;
-    out.push({ start: m.index, end: m.index + m[0].length, text: m[0], secs, secs2, label: labelFor(text, m.index) });
+    const t = { start: m.index, end: m.index + m[0].length, text: m[0], secs, secs2, label: labelFor(text, m.index) };
+    // "55 minutes to 1 hour": two times with units of their own make one range.
+    const last = out[out.length - 1];
+    if (last && last.secs2 == null && secs2 == null && secs > last.secs && /^\s*(?:-|–|—|to|or)\s*$/i.test(text.slice(last.end, t.start))) {
+      out[out.length - 1] = { ...last, end: t.end, text: text.slice(last.start, t.end), secs2: secs };
+    } else out.push(t);
   }
   return out;
 }
