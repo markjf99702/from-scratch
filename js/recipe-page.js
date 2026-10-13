@@ -181,13 +181,15 @@ function scaleSheet(r) {
     body.addEventListener('input', e => { used = e.target.id; if (e.target.id === 'hIn') haveNote(); });
     body.addEventListener('change', e => { if (e.target.id === 'hSel') { used = 'hIn'; haveNote(); } });
     const apply = () => {
-      if (used === 'hIn' || (!used && $('hIn')?.value)) {
-        const have = readAmount($('hIn').value), line = counted.find(l => l.i === +$('hSel').value);
-        if (have && line) return set(have / line.p.q);
-      }
-      if (used === 'yIn') { const v = readAmount($('yIn').value); if (v) return set(v / y.n); }
-      if (used === 'fIn' || $('fIn').value) { const v = readAmount($('fIn').value); if (v) return set(v); }
-      close();
+      // The field last typed in decides, or else one with something in it (Serves always has its number).
+      const id = used || ($('hIn')?.value.trim() ? 'hIn' : $('fIn').value.trim() ? 'fIn' : null);
+      if (!id || !$(id).value.trim()) { close(); return; }
+      const v = readAmount($(id).value);
+      // 0, below zero, or words it can't read: say so, and keep the sheet open to fix it.
+      if (!v) { toast('That amount won’t work. Try a number like 1½ or 2.'); return; }
+      if (id === 'yIn') return set(v / y.n);
+      if (id === 'hIn') { const line = counted.find(l => l.i === +$('hSel').value); return line ? set(v / line.p.q) : close(); }
+      set(v);
     };
     body.addEventListener('click', e => {
       const chip = e.target.closest('[data-f]');

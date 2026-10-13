@@ -155,6 +155,20 @@ assert.match(await page.locator('.steps').innerText(), /350°F/);
 assert.match(await page.locator('.steps').innerText(), /10 inch springform/);
 await page.click('[data-units="as"]');
 
+// An amount that won't work says so and keeps the sheet open: 0, below zero, words, or serving nobody.
+await page.goto(base + '#/r/sample-walt-chili');
+for (const [field, value] of [['#fIn', '0'], ['#fIn', '-2'], ['#fIn', 'abc'], ['#fIn', '1/0'], ['#yIn', '0']]) {
+  await page.click('[data-act="scale"]');
+  await page.evaluate(() => { document.getElementById('toast').hidden = true; });
+  await page.fill(field, value);
+  await page.click('[data-a="apply"]');
+  assert.equal(await page.locator('#toast').isVisible(), true, `${field} ${value} says so`);
+  assert.match(await page.locator('#toast').innerText(), /That amount won’t work/);
+  assert.equal(await page.evaluate(() => document.getElementById('sheet').open), true, `the sheet stays open for ${value}`);
+  await page.keyboard.press('Escape');
+}
+assert.equal(await page.locator('.scaled').count(), 0, 'nothing was scaled');
+
 // By servings: Uncle Walt's chili for 12 instead of 6.
 await page.goto(base + '#/r/sample-walt-chili');
 await page.click('[data-act="scale"]');
