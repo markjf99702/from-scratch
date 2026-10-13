@@ -172,12 +172,20 @@ export function convertStep(step, mode) {
   let at = 0;
   for (const h of hits) {
     if (h.start < at) continue;
-    if (h.start > at) out.push({ text: text.slice(at, h.start) });
+    if (h.start > at) out.push({ text: article(text.slice(at, h.start), h.text) });
     out.push({ text: h.text, was: h.was });
     at = h.end;
   }
   if (at < text.length) out.push({ text: text.slice(at) });
   return out;
+}
+
+// "an 8-inch pan" is "a 20 cm pan": an "a" or "an" right before a converted size goes with the new number.
+function article(before, next) {
+  return before.replace(/\b(an?)(\s+)$/i, (all, art, gap) => {
+    const want = /^(?:8|11(?!\d)|18(?!\d))/.test(next) ? 'an' : 'a';
+    return (art[0] === 'A' ? 'A' + want.slice(1) : want) + gap;
+  });
 }
 
 function inchValue(s) {

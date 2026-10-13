@@ -365,6 +365,17 @@ test('an oven temperature range converts at both ends', () => {
   assert.equal(convertStep('slow oven (300–325°F)', 'metric').find(x => x.was).was, '300–325°F', 'the card’s words for both ends');
 });
 
+test('“a” or “an” before a converted size goes with the new number', () => {
+  const m = s => convertStep(s, 'metric').map(x => (x.was ? `[${x.text}]` : x.text)).join('');
+  const u = s => convertStep(s, 'us').map(x => (x.was ? `[${x.text}]` : x.text)).join('');
+  assert.equal(m('Heat the oven to 350°F. Grease an 8-inch square pan.'), 'Heat the oven to [180°C]. Grease a [20 cm] square pan.');
+  assert.equal(m('An 8-inch pan works too.'), 'A [20 cm] pan works too.');
+  assert.equal(m('Grease a 9x13-inch pan.'), 'Grease a [23 × 33 cm] pan.');
+  assert.equal(u('Butter a 20 cm tin.'), 'Butter an [8 inch] tin.');
+  assert.equal(u('Use an 18 cm tin.'), 'Use a [7 inch] tin.');
+  assert.equal(u('Line a 28 x 18 cm tin.'), 'Line an [11 × 7 inch] tin.');
+});
+
 test('a temperature already given in both units stays as it is', () => {
   const m = s => convertStep(s, 'metric').map(x => (x.was ? `[${x.text}]` : x.text)).join('');
   const u = s => convertStep(s, 'us').map(x => (x.was ? `[${x.text}]` : x.text)).join('');
