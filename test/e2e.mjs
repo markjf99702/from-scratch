@@ -253,6 +253,8 @@ assert.match(await page.locator('.cook-kicker').innerText(), /Step 6 of 6/i);
 assert.equal(await page.locator('.timer').count(), 1, 'the timer keeps going on the next step');
 await page.click('.cook-step .tm');
 assert.equal(await page.locator('.timer').count(), 2, 'two timers at once');
+await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+assert.ok(await uncovered(page, '#wakeNote'), 'the timers don’t hide the note about the screen');
 await page.click('.cook-x');
 await page.locator('.rtitle').waitFor();
 assert.equal(await page.evaluate(() => window.__released), 1, 'lets the screen sleep again');
