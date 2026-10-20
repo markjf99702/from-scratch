@@ -516,7 +516,16 @@ function plusText(plus, factor) {
   const n = plus.q * factor, n2 = plus.q2 == null ? null : plus.q2 * factor;
   const was = plus.q2 ?? plus.q, top = n2 ?? n;
   const qty = amountText(n, '') + (n2 != null ? '–' + amountText(n2, '') : '');
-  return `${plus.word} ${qty} ${(was > 1) !== (top > 1) ? recount(plus.item, top) : plus.item}`;
+  return `${plus.word} ${qty} ${(was > 1) !== (top > 1) ? recountThing(plus.item, top) : plus.item}`;
+}
+
+// Only the thing counted changes number, not the words about what it's for: "plus 2 beaten eggs for glazing",
+// "plus 2 for brushing", "plus 2 more if needed".
+function recountThing(item, n) {
+  const m = /\s*\b(?:for|to|if|as|in|into|on|at|from|until|when)\b/i.exec(item);
+  const thing = m ? item.slice(0, m.index) : item;
+  if (!thing || /\b(?:more|extra|other)$/i.test(thing)) return item;
+  return recount(thing, n) + item.slice(thing.length);
 }
 
 const pAmbiguousCount = p => p.q == null || !p.item;

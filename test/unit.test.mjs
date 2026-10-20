@@ -254,6 +254,16 @@ test('a second count after "plus" scales with the line', () => {
   assert.equal(show('2 eggs plus an extra yolk', { factor: 2 }), '4 eggs plus 2 extra yolks');
   assert.equal(show('4 eggs plus 2 yolks, at room temperature', { factor: 0.5 }), '2 eggs plus 1 yolk, at room temperature');
   assert.equal(show('3 eggs plus 1 or 2 yolks', { factor: 2 }), '6 eggs plus 2–4 yolks');
+  // Only the thing counted changes number, never the words about what it's for.
+  assert.equal(show('1 egg plus 1 for brushing', { factor: 2 }), '2 eggs plus 2 for brushing');
+  assert.equal(show('2 eggs, plus 1 more if needed', { factor: 2 }), '4 eggs, plus 2 more if needed');
+  assert.equal(show('3 eggs, plus 1 for the egg wash', { factor: 2 }), '6 eggs, plus 2 for the egg wash');
+  assert.equal(show('2 eggs plus 1 to brush the top', { factor: 2 }), '4 eggs plus 2 to brush the top');
+  assert.equal(show('2 eggs, plus 1 beaten egg for glazing', { factor: 2 }), '4 eggs, plus 2 beaten eggs for glazing');
+  assert.equal(show('4 eggs, plus 2 hard-boiled eggs to garnish', { factor: 0.5 }), '2 eggs, plus 1 hard-boiled egg to garnish');
+  assert.equal(show('10 strawberries plus 6 more to decorate', { factor: 0.5 }), '5 strawberries plus 3 more to decorate');
+  assert.equal(show('4 eggs plus 1 more', { factor: 2 }), '8 eggs plus 2 more');
+  assert.equal(show('4 eggs plus 2 more yolks', { factor: 0.5 }), '2 eggs plus 1 more yolk');
   // "I have 3 large eggs" scales by the eggs.
   const p = parseLine('2 large eggs plus 1 yolk');
   assert.equal(p.item, 'large eggs');
