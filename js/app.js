@@ -169,7 +169,8 @@ function waysHTML() {
 }
 
 // ---------- adding ----------
-const SKILL_URL = 'https://github.com/markjf99702/from-scratch/tree/main/skill/from-scratch-cards';
+// The skill as a zip, ready to upload in claude.ai (tools/skill-zip.mjs makes it from skill/from-scratch-cards/).
+const SKILL_URL = 'https://github.com/markjf99702/from-scratch/raw/main/skill/from-scratch-cards.zip';
 
 function addPage() {
   document.title = 'Add a recipe · From Scratch';
@@ -180,7 +181,7 @@ function addPage() {
       <section class="paper claude">
         <h2>${icon.camera} Photograph a card, and Claude types it up</h2>
         <ol class="howto">
-          <li>Give Claude the From Scratch skill, once: <a href="${SKILL_URL}">skill/from-scratch-cards</a>. It tells Claude how to read old cards: “c.” and “T.”, oleo, a scant cup, a moderate oven.</li>
+          <li>Give Claude the From Scratch skill, once: download <a href="${SKILL_URL}">from-scratch-cards.zip</a> and upload it in claude.ai under Settings › Capabilities › Skills, with code execution on. It tells Claude how to read old cards: “c.” and “T.”, oleo, a scant cup, a moderate oven.</li>
           <li>Send Claude photos of the cards, front and back, and say whose they are.</li>
           <li>Open the link Claude sends back. The recipes show up here to check against the card before they go in your box.</li>
         </ol>

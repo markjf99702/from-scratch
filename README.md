@@ -84,7 +84,8 @@ The [privacy page](https://junkdrawer.works/privacy.html) has the details.
 
 ## Typing up cards with Claude
 
-`skill/from-scratch-cards/` is a skill for Claude. Zip the folder and upload it as a skill in claude.ai (it needs code
+`skill/from-scratch-cards/` is a skill for Claude, and `skill/from-scratch-cards.zip` is the same folder ready to upload
+(the Add page links to it). Upload the zip in claude.ai under Settings › Capabilities › Skills (it needs code
 execution), then send Claude photos of the cards and say whose they are. It:
 1. reads each card, front and back, in her words and her amounts, and flags what it couldn't read;
 2. writes the recipes in the format From Scratch reads (`references/format.md`), using `references/old-cards.md` for
@@ -112,6 +113,7 @@ npm test                      # the logic in Node, then the real page in Chromiu
 node tools/screenshots.mjs    # redraws docs/*.png and og.png
 node tools/make-icons.mjs     # redraws the PNG icons from icon.svg
 node tools/sample-card.mjs    # redraws the made-up photo of Grandma Rosa's card
+node tools/skill-zip.mjs      # makes skill/from-scratch-cards.zip again after a change to the skill
 npm run build                 # dist/from-scratch.html and dist/artifact.html, the whole app in one file
 ```
 
@@ -130,11 +132,11 @@ To put it online with GitHub Pages: **Settings → Pages → Build and deploymen
 - `js/store.js`: the box and settings in localStorage. `js/photos.js`: card photos in IndexedDB. `js/sync.js`: Google
   Drive. `js/share.js`: links. `js/samples.js`: the five samples, and `samples/rosa-card.jpg`, made by `tools/sample-card.mjs`.
 - `skill/from-scratch-cards/`: the Claude skill: `SKILL.md`, `references/` (format, old cards, a worked example) and
-  `scripts/make_card_link.py`.
+  `scripts/make_card_link.py`. `skill/from-scratch-cards.zip` is the folder packed by `tools/skill-zip.mjs`.
 - `scripts/build.mjs`: the single-file copy. `fonts/`: Figtree, Fraunces and Caveat, all under the SIL Open Font License,
   served from here so nothing loads from elsewhere. `sw.js`: keeps a copy for using offline.
 - `test/unit.test.mjs` checks the parsing (fractions, unicode fractions, ranges, cans, "to taste", old abbreviations),
   scaling, conversions, timers, pasted recipes, merging (including devices syncing in random orders), links, and that
-  the skill's script, its format reference and the page agree. `test/e2e.mjs` uses the page on a phone-sized Chromium:
+  the skill's script, its format reference, its zip and the page agree. `test/e2e.mjs` uses the page on a phone-sized Chromium:
   the box, scaling, grams, cook mode and timers, typing, pasting, a link from Claude, sending to a second device,
   printing a card and a page, backups, offline, and Google Drive between devices against `test/fake-google.mjs`.

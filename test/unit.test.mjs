@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
 import vm from 'node:vm';
 import { readFileSync, mkdtempSync, readdirSync } from 'node:fs';
+import { inflateRawSync } from 'node:zlib';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -843,6 +844,37 @@ test('the skill’s script knows the same unit words as the page', { skip: !pyth
   const { UNIT_NAMES } = await import('../js/units.js');
   const script = JSON.parse(execFileSync(python, [join(root, 'skill/from-scratch-cards/scripts/make_card_link.py'), '--units'], { encoding: 'utf8' }));
   assert.deepEqual([...script].sort(), UNIT_NAMES.map(u => u.name).sort());
+});
+
+// The names and contents in a zip file, read from its central directory (stored or deflated entries).
+function readZip(buf) {
+  const end = buf.lastIndexOf(Buffer.from([0x50, 0x4b, 0x05, 0x06]));
+  assert.ok(end >= 0, 'a zip file');
+  const files = [];
+  for (let at = buf.readUInt32LE(end + 16), i = 0; i < buf.readUInt16LE(end + 10); i++) {
+    assert.equal(buf.readUInt32LE(at), 0x02014b50);
+    const method = buf.readUInt16LE(at + 10), size = buf.readUInt32LE(at + 20), nameLen = buf.readUInt16LE(at + 28);
+    const name = buf.toString('utf8', at + 46, at + 46 + nameLen), local = buf.readUInt32LE(at + 42);
+    const start = local + 30 + buf.readUInt16LE(local + 26) + buf.readUInt16LE(local + 28);
+    const raw = buf.subarray(start, start + size);
+    files.push([name, method === 8 ? inflateRawSync(raw) : Buffer.from(raw)]);
+    at += 46 + nameLen + buf.readUInt16LE(at + 30) + buf.readUInt16LE(at + 32);
+  }
+  return files;
+}
+
+// The Add page links to this zip for uploading the skill in claude.ai, so it must hold the folder as it is now.
+test('the skill’s zip holds exactly what its folder does', async () => {
+  const { skillFiles, ZIP } = await import('../tools/skill-zip.mjs');
+  const fix = 'run node tools/skill-zip.mjs';
+  const got = readZip(readFileSync(ZIP)), want = skillFiles();
+  assert.ok(want.some(([name]) => name === 'from-scratch-cards/SKILL.md'), 'the folder is at the top of the zip');
+  assert.deepEqual(got.map(f => f[0]), want.map(f => f[0]), `the zip has other files than the folder: ${fix}`);
+  for (const [i, [name, data]] of want.entries()) assert.ok(got[i][1].equals(data), `${name} in the zip is out of date: ${fix}`);
+  // And a zip tool other than this file's reader opens it, checksums and all.
+  if (python) execFileSync(python, ['-c', 'import sys, zipfile; z = zipfile.ZipFile(sys.argv[1]); assert z.testzip() is None', ZIP]);
+  const url = /const SKILL_URL = '([^']+)'/.exec(readFileSync(join(root, 'js/app.js'), 'utf8'))[1];
+  assert.equal(url, 'https://github.com/markjf99702/from-scratch/raw/main/skill/from-scratch-cards.zip', 'the Add page links to the zip');
 });
 
 test('the offline copy lists every file the page uses', () => {
