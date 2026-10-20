@@ -334,15 +334,17 @@ export function shortTime(s) {
 
 // Pasted text → { title, from, serves, makes, prep, cook, ingredients: [], steps: [], notes }.
 // It looks for headings like "Ingredients" and "Directions"; without them, a run of lines that start with an
-// amount is the ingredient list, and the sentences after it are the steps (after a blank line, one sentence with no
-// amount is enough to start them).
+// amount is the ingredient list, and the sentences after it are the steps (with no Directions heading, after a blank
+// line that ends two or more ingredients in a row, one sentence with no amount is enough to start them).
 export function splitRecipe(text) {
   const out = { title: '', from: '', serves: '', makes: '', prep: '', cook: '', total: '', ingredients: [], steps: [], notes: '' };
   const lines = String(text || '').replace(/\r\n?/g, '\n').split('\n').map(l => l.replace(/\s+/g, ' ').trim());
-  let mode = 'head', numbered = false, blank = false;
+  const stepsHeading = lines.some(l => MARK_STEPS.test(l));
+  // run: ingredients in a row since the last blank line; before: the run that blank line ended.
+  let mode = 'head', numbered = false, blank = false, run = 0, before = 0;
   const notes = [], intro = [];
   for (const line of lines) {
-    if (!line) { blank = true; continue; }
+    if (!line) { if (!blank) before = run; run = 0; blank = true; continue; }
     const wasBlank = blank;
     blank = false;
     if (MARK_ING.test(line)) { mode = 'ing'; continue; }
@@ -357,11 +359,12 @@ export function splitRecipe(text) {
     }
     if (mode === 'ing') {
       const h = headingOf(line);
-      if (looksLikeIngredient(line) || (h && !looksLikeStep(line))) { out.ingredients.push(line.replace(/^[-•*·▪◦]\s+/, '')); continue; }
-      // After a blank line, a line with no amount that ends like a sentence ("Preheat oven to 375 degrees.") is a step.
-      const sentence = wasBlank && out.ingredients.length > 0 && /[.!)]$/.test(line) && parseLine(line)?.q == null;
+      if (looksLikeIngredient(line) || (h && !looksLikeStep(line))) { out.ingredients.push(line.replace(/^[-•*·▪◦]\s+/, '')); run++; continue; }
+      // After a blank line that ends a run of ingredients, a line with no amount that ends like a sentence ("Preheat
+      // oven to 375 degrees.") is a step, unless a Directions heading is there to say where the steps start.
+      const sentence = !stepsHeading && wasBlank && before >= 2 && /[.!)]$/.test(line) && parseLine(line)?.q == null;
       if (sentence || looksLikeStep(line) || /^[A-Z][a-z]+ (the|in|a|all|together|until|to|over)\b/.test(line)) mode = 'steps';
-      else { out.ingredients.push(line); continue; }
+      else { out.ingredients.push(line); run++; continue; }
     }
     if (mode === 'steps') {
       const isNum = /^(?:step\s*)?\d+\s*[.):-]\s*\S/i.test(line);

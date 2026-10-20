@@ -554,6 +554,57 @@ Heat the oven (425°F)
 Rub the butter into the flour.`);
   assert.deepEqual(s.ingredients, ['2 cups flour', '1/2 cup butter', 'Salt, to taste.', 'Topping:', '1 quart strawberries']);
   assert.deepEqual(s.steps, ['Heat the oven (425°F)', 'Rub the butter into the flour.']);
+  // With a Directions heading, the heading says where the steps start, so a blank line doesn't: "Whipped cream
+  // (optional)" and what comes after it stay ingredients, in a list copied with a blank line between every line too.
+  const web = splitRecipe(`Strawberry Shortcake
+
+Ingredients
+
+2 cups flour
+
+1/2 cup butter
+
+Whipped cream (optional)
+
+1 quart strawberries
+
+Directions
+
+Heat the oven to 425°F.
+
+Rub the butter into the flour.`);
+  assert.deepEqual(web.ingredients, ['2 cups flour', '1/2 cup butter', 'Whipped cream (optional)', '1 quart strawberries']);
+  assert.deepEqual(web.steps, ['Heat the oven to 425°F.', 'Rub the butter into the flour.']);
+  const served = splitRecipe(`Pancakes
+Ingredients
+2 cups flour
+2 eggs
+1 1/2 cups buttermilk
+
+Maple syrup (to serve)
+Butter (to serve)
+
+Directions
+Mix the dry ingredients.
+Cook on a hot griddle.`);
+  assert.deepEqual(served.ingredients, ['2 cups flour', '2 eggs', '1 1/2 cups buttermilk', 'Maple syrup (to serve)', 'Butter (to serve)']);
+  assert.deepEqual(served.steps, ['Mix the dry ingredients.', 'Cook on a hot griddle.']);
+  // With no headings, a blank line ends the list only after two or more ingredients in a row: in a list with a blank
+  // line between every line, a blank line says nothing.
+  const spaced = splitRecipe(`Pancakes
+
+2 cups flour
+
+2 eggs
+
+1 1/2 cups buttermilk
+
+Maple syrup (to serve)
+
+Mix the flour, eggs and buttermilk together until smooth.
+Cook on a hot griddle until bubbles form, then flip.`);
+  assert.deepEqual(spaced.ingredients, ['2 cups flour', '2 eggs', '1 1/2 cups buttermilk', 'Maple syrup (to serve)']);
+  assert.equal(spaced.steps.length, 2);
 });
 
 // ---------- recipes and boxes ----------
