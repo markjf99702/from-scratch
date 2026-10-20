@@ -262,7 +262,9 @@ export function stepIngredients(lines, steps) {
       sectionsSeen[section] = key.length ? key[key.length - 1] : '';
       return;
     }
-    const phrases = phrasesFor((p.pre ? p.pre.replace(/\s+of$/i, '') + ' ' : '') + (p.item || text));
+    // "2 eggs plus 1 yolk": the yolk is the same line's too.
+    const plus = p.plus?.at === 'item' ? ' ' + p.plus.text : '';
+    const phrases = phrasesFor((p.pre ? p.pre.replace(/\s+of$/i, '') + ' ' : '') + (p.item || text) + plus);
     if (phrases.length) items.push({ i, section, phrases, full: phrases[0].length });
   });
   return (steps || []).map(step => {

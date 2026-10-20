@@ -242,6 +242,29 @@ test('the card’s own word for a count stays unless scaling takes it across one
   assert.equal(show('2–3 apples', { factor: 0.5 }), '1–1½ apples', 'the top of a range decides');
 });
 
+test('a second count after "plus" scales with the line', () => {
+  for (const line of ['2 large eggs plus 1 yolk', '3 eggs + 1 egg white', '2 eggs, plus 1 yolk', '2 eggs plus one yolk', '4 eggs plus 2 yolks, at room temperature'])
+    assert.equal(show(line), line, `${line} as written`);
+  assert.equal(show('2 large eggs plus 1 yolk', { factor: 2 }), '4 large eggs plus 2 yolks');
+  assert.equal(show('2 large eggs plus 1 yolk', { factor: 0.5 }), '1 large egg plus ½ yolk');
+  assert.equal(show('2 eggs plus 2 egg yolks', { factor: 0.5 }), '1 egg plus 1 egg yolk');
+  assert.equal(show('3 eggs + 1 egg white', { factor: 2 }), '6 eggs + 2 egg whites');
+  assert.equal(show('2 eggs, plus 1 yolk', { factor: 2 }), '4 eggs, plus 2 yolks');
+  assert.equal(show('2 eggs plus an extra yolk', { factor: 2 }), '4 eggs plus 2 extra yolks');
+  assert.equal(show('4 eggs plus 2 yolks, at room temperature', { factor: 0.5 }), '2 eggs plus 1 yolk, at room temperature');
+  assert.equal(show('3 eggs plus 1 or 2 yolks', { factor: 2 }), '6 eggs plus 2–4 yolks');
+  // "I have 3 large eggs" scales by the eggs.
+  const p = parseLine('2 large eggs plus 1 yolk');
+  assert.equal(p.item, 'large eggs');
+  assert.equal(p.plus.q, 1);
+  // What it can't read as a count stays as the card has it.
+  assert.match(show('1 egg plus 1 tablespoon water', { factor: 2 }), / plus 1 tablespoon water$/);
+  assert.match(show('2 eggs plus enough milk to make 1 cup', { factor: 2 }), / plus enough milk to make 1 cup$/);
+  assert.match(show('2 eggs plus a little milk', { factor: 2 }), / plus a little milk$/);
+  // A step about the yolk still uses that line.
+  assert.deepEqual(stepIngredients(['2 large eggs plus 1 yolk', '1 cup sugar'], ['Beat the yolk into the sugar.']), [[0, 1]]);
+});
+
 // ---------- converting ----------
 test('USDA cup weights for baking ingredients', () => {
   assert.equal(densityFor('all-purpose flour').g, 125);
@@ -770,7 +793,7 @@ test('every ingredient line in the skill’s format reference reads as the refer
     assert.equal(p.item, item.replace(/ \(juice of\)$/, ''), `${line}: item`);
     assert.equal(p.note, note, `${line}: note`);
     if (!amount) { assert.equal(p.q, null, `${line}: no amount`); continue; }
-    const m = /^(about )?([\d½¼¾⅓⅔⅛]+)(?: to ([\d½¼¾⅓⅔⅛]+))?(?:, each ([\d½¼¾]+) oz)?(?: \(also (\d+) sticks\))?(?:, (scant))?$/.exec(amount);
+    const m = /^(about )?([\d½¼¾⅓⅔⅛]+)(?: to ([\d½¼¾⅓⅔⅛]+))?(?:, each ([\d½¼¾]+) oz)?(?: \(also (\d+) sticks\))?(?:, (scant))?(?:, plus ([\d½¼¾⅓⅔⅛]+) ([a-z ]+))?$/.exec(amount);
     assert.ok(m, `${line}: the reference's amount "${amount}" is in a form this test knows`);
     assert.equal(kitchen(p.q, [2, 3, 4, 8]), m[2], `${line}: amount`);
     if (m[1]) assert.equal(p.mod, 'about');
@@ -778,6 +801,7 @@ test('every ingredient line in the skill’s format reference reads as the refer
     if (m[4]) assert.equal(kitchen(p.size.q, [2, 4]), m[4], `${line}: size`);
     if (m[5]) assert.equal(p.alt.q, +m[5], `${line}: also`);
     if (m[6]) assert.equal(p.mod, 'scant');
+    if (m[7]) assert.deepEqual([kitchen(p.plus.q, [2, 3, 4, 8]), p.plus.item], [m[7], m[8]], `${line}: the second count`);
   }
 });
 

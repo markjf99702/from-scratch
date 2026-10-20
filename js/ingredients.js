@@ -221,7 +221,28 @@ export function parseLine(line) {
   out.item = item.trim().replace(/^of\s+/i, '');
   out.note = note.trim();
   if (!out.item && out.q == null) out.item = text;
+  if (out.q != null && !out.u && !out.size) readPlus(out);
   return out;
+}
+
+// "2 large eggs plus 1 yolk", "3 eggs + 2 whites", "2 eggs, plus 1 yolk": a second thing counted after the first.
+// It's kept apart from the item as plus: { q, q2, item, word, text, at } so it scales with the line. Anything else
+// after "plus" ("plus 1 tablespoon water", "plus enough milk to make 1 cup") stays where it was, as written.
+function readPlus(out) {
+  let m = /\s(plus|\+)\s+/i.exec(out.item), at = 'item', head = out.item, tail;
+  if (m) { head = out.item.slice(0, m.index).trim(); tail = out.item.slice(m.index + m[0].length); }
+  else if ((m = /^(plus|\+)\s+/i.exec(out.note))) { at = 'note'; tail = out.note.slice(m[0].length); }
+  else return;
+  const a = readAmount(tail);
+  if (!a || !head) return;
+  let noun = tail.slice(a.len).trim(), rest = '';
+  const comma = at === 'note' ? noun.indexOf(',') : -1;
+  if (comma >= 0) { rest = noun.slice(comma + 1).trim(); noun = noun.slice(0, comma).trim(); }
+  if (!/^[a-z]/i.test(noun) || /[\d()+]|\bplus\b/i.test(noun) || readUnit(noun) || (a.article && VAGUE.test(noun))) return;
+  const text = `${m[1]} ${tail.slice(0, a.len).trim()} ${noun}`;
+  out.plus = { q: a.q, q2: a.q2, item: noun, word: m[1], text, at };
+  if (at === 'item') out.item = head;
+  else out.note = rest;
 }
 
 function topLevelSplit(s) {
@@ -480,8 +501,22 @@ export function present(p, { factor = 1, mode = 'as' } = {}) {
       const part = { '¼': 'a quarter', '⅓': 'a third', '½': 'half', '⅔': 'two thirds', '¾': 'three quarters' }[kitchen(q - Math.floor(q), [2, 3, 4])];
       if (part) out.hint = `beat the last egg and use ${part} of it`;
     }
+    // "plus 1 yolk" goes back where the card had it, scaled the same way: ×2 "plus 2 yolks", ×½ "plus ½ yolk".
+    if (p.plus) {
+      const plus = plusText(p.plus, scaled ? factor : 1);
+      if (p.plus.at === 'note') out.note = out.note ? plus + ', ' + out.note : plus;
+      else out.item += ' ' + plus;
+    }
   }
   return out;
+}
+
+function plusText(plus, factor) {
+  if (factor === 1) return plus.text;
+  const n = plus.q * factor, n2 = plus.q2 == null ? null : plus.q2 * factor;
+  const was = plus.q2 ?? plus.q, top = n2 ?? n;
+  const qty = amountText(n, '') + (n2 != null ? '–' + amountText(n2, '') : '');
+  return `${plus.word} ${qty} ${(was > 1) !== (top > 1) ? recount(plus.item, top) : plus.item}`;
 }
 
 const pAmbiguousCount = p => p.q == null || !p.item;

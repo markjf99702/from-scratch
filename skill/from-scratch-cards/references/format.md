@@ -60,6 +60,7 @@ what lets it scale the amount, turn cups into grams, and show which ingredients 
 | `about 2 cups milk` | about 2 | cup | milk | |
 | `1 cup plus 2 tbsp flour` | 1⅛ | cup | flour | |
 | `2 large eggs` | 2 | | large eggs | |
+| `2 large eggs plus 1 yolk` | 2, plus 1 yolk | | large eggs | |
 | `Juice of 1 lemon` | 1 | | lemon (juice of) | |
 | `Pinch of salt` | 1 | pinch | salt | |
 | `Salt and pepper, to taste` | | | Salt and pepper | to taste |
@@ -75,6 +76,8 @@ what lets it scale the amount, turn cups into grams, and show which ingredients 
 - **Sizes** of cans and packages go in brackets between the count and the unit: `1 (15 oz) can`. They stay the same
   when the recipe is scaled.
 - **Notes** go after a comma: `1 onion, chopped`. A note in brackets at the end works too: `2 cups walnuts (optional)`.
+- **A second count** after the item, as in `2 large eggs plus 1 yolk`, scales with the line: halved, it reads 1 large
+  egg plus ½ yolk. Keep it on one line, the way the card has it.
 
 Things with no amount ("Salt, to taste", "Melted butter, for brushing") are fine; they're shown as written and never
 scaled.
