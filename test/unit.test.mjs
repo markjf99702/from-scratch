@@ -781,11 +781,12 @@ test('the offline copy lists every file the page uses', () => {
   for (const f of shell) if (f !== './') assert.ok(want.includes(f), `sw.js lists ${f}, which isn't there`);
 });
 
-// Every tool at junkdrawer.works/REPO/ shares one Cache Storage: a new version must clear only its own old copies.
+// Every tool at junkdrawer.works/REPO/ shares one Cache Storage: a new version must clear only its own old copies,
+// by their exact names, so a project called from-scratch-something keeps its offline copy.
 test('the offline copy clears only its own old caches', async () => {
   const src = readFileSync(join(root, 'sw.js'), 'utf8');
   const current = /const CACHE = '([^']+)'/.exec(src)[1];
-  const stored = new Set(['from-scratch-v0', 'other-tool-v1', 'every-so-often-v3', 'from-scratch', current]);
+  const stored = new Set(['from-scratch-v0', 'other-tool-v1', 'every-so-often-v3', 'from-scratch', 'from-scratch-x-v1', 'from-scratch-cards-v2', current]);
   const on = {};
   vm.runInNewContext(src, {
     self: { addEventListener: (type, fn) => { on[type] = fn; }, clients: { claim: async () => {} }, skipWaiting: async () => {} },
@@ -795,5 +796,5 @@ test('the offline copy clears only its own old caches', async () => {
   let done;
   on.activate({ waitUntil: p => { done = p; } });
   await done;
-  assert.deepEqual([...stored].sort(), ['every-so-often-v3', 'from-scratch', current, 'other-tool-v1'].sort(), 'only from-scratch-v0 goes');
+  assert.deepEqual([...stored].sort(), ['every-so-often-v3', 'from-scratch', 'from-scratch-x-v1', 'from-scratch-cards-v2', current, 'other-tool-v1'].sort(), 'only from-scratch-v0 goes');
 });
