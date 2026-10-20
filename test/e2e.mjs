@@ -366,6 +366,40 @@ await page.click('button[type="submit"]');
 await page.locator('.rtitle:has-text("Molasses Crinkles")').waitFor();
 assert.equal(await page.locator('.steps .tm').count(), 2, 'the chill and the bake are timers');
 
+// A pasted "Total time" goes in its own field, not in Cook time, and the form can change it (on another phone, so
+// this box keeps its count).
+const oats = await device({ sw: false });
+await oats.page.goto(base + '#/paste');
+await oats.page.fill('#pasteText', `Overnight Oats
+Prep Time: 5 minutes
+Total Time: 8 hours 5 minutes
+Servings: 2
+
+Ingredients
+1 cup rolled oats
+1 cup milk
+1/2 cup yogurt
+
+Instructions
+1. Stir everything together in a jar.
+2. Refrigerate overnight, at least 8 hours.`);
+await oats.page.click('[data-act="split"]');
+await oats.page.locator('#editForm').waitFor();
+const times = p => Promise.all(['prep', 'cook', 'total'].map(k => p.inputValue(`input[name="${k}"]`)));
+assert.deepEqual(await times(oats.page), ['5 min', '', '8 hr 5 min'], 'Total time has a field of its own');
+await fits(oats.page, 'the form with three times');
+await oats.page.click('button[type="submit"]');
+await oats.page.locator('.rtitle:has-text("Overnight Oats")').waitFor();
+assert.equal(await oats.page.locator('.rhead .meta').innerText(), 'Serves 2 · Prep 5 min · Total 8 hr 5 min');
+await oats.page.click('a.act[href$="/edit"]');
+await oats.page.locator('#editForm').waitFor();
+assert.deepEqual(await times(oats.page), ['5 min', '', '8 hr 5 min'], 'the form shows the total it saved');
+await oats.page.fill('input[name="total"]', '8 hr 10 min');
+await oats.page.click('button[type="submit"]');
+await oats.page.locator('.rtitle:has-text("Overnight Oats")').waitFor();
+assert.equal(await oats.page.locator('.rhead .meta').innerText(), 'Serves 2 · Prep 5 min · Total 8 hr 10 min');
+await oats.ctx.close();
+
 // ---------- a link from Claude ----------
 const python = spawnSync('python3', ['--version']).status === 0;
 let claudeLink;

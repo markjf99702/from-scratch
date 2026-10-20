@@ -9,7 +9,7 @@ import { linkData } from './share.js';
 import { app, $, esc, on, go, toast, icon, amountHTML, footer } from './ui.js';
 
 const DRAFT = 'fromscratch.draft';
-const FIELDS = ['title', 'from', 'serves', 'makes', 'prep', 'cook', 'ingredients', 'steps', 'notes', 'tags', 'source', 'check'];
+const FIELDS = ['title', 'from', 'serves', 'makes', 'prep', 'cook', 'total', 'ingredients', 'steps', 'notes', 'tags', 'source', 'check'];
 const IDEAS = ['Breakfast', 'Bread', 'Baking', 'Cookies', 'Cake', 'Pie', 'Dessert', 'Dinner', 'Soup', 'Sides', 'Salad', 'Holidays', 'Canning'];
 
 let dirty = false, pendingPhoto = null, dropPhoto = false, previewUrl = null;
@@ -21,7 +21,7 @@ const clearDraft = () => { try { localStorage.removeItem(DRAFT); } catch { /* no
 
 function toForm(r) {
   return {
-    title: r.title || '', from: r.from || '', serves: r.serves || '', makes: r.makes || '', prep: r.prep || '', cook: r.cook || '',
+    title: r.title || '', from: r.from || '', serves: r.serves || '', makes: r.makes || '', prep: r.prep || '', cook: r.cook || '', total: r.total || '',
     ingredients: (r.ingredients || []).join('\n'), steps: (r.steps || []).join('\n'), notes: r.notes || '',
     tags: (r.tags || []).join(', '), source: r.source || '', check: r.check || '',
   };
@@ -50,7 +50,7 @@ export function editPage(r) {
         ${field('title', 'Name of the recipe', 'required placeholder="Cinnamon Crumb Coffee Cake"')}
         ${field('from', 'Whose recipe is it?', 'placeholder="Grandma Rosa"', 'Shown as “From the kitchen of …” on the card.')}
         <div class="two">${field('serves', 'Serves', 'inputmode="numeric" placeholder="8"')}${field('makes', 'Or makes', 'placeholder="2 dozen cookies"')}</div>
-        <div class="two">${field('prep', 'Prep time', 'placeholder="20 min"')}${field('cook', 'Cook time', 'placeholder="45 min"')}</div>
+        <div class="three">${field('prep', 'Prep time', 'placeholder="20 min"')}${field('cook', 'Cook time', 'placeholder="45 min"')}${field('total', 'Total time', 'placeholder="1 hr 5 min"')}</div>
         <label class="field"><span class="lbl">Ingredients</span><small>One per line, the way the card has it: “1 1/2 c. flour, sifted” is fine. A line ending in a colon, like “For the glaze:”, starts a section.</small><textarea name="ingredients" rows="10" placeholder="2 cups all-purpose flour&#10;1 cup (2 sticks) butter, softened&#10;3/4 cup sugar&#10;For the glaze:&#10;1 cup confectioners' sugar">${esc(v.ingredients)}</textarea></label>
         <div class="parse" id="parse" aria-live="polite"></div>
         <label class="field"><span class="lbl">Steps</span><small>One step per line. Times like “bake 25–30 minutes” become timers you can tap.</small><textarea name="steps" rows="8" placeholder="Heat the oven to 350°F.&#10;Cream the butter and sugar…">${esc(v.steps)}</textarea></label>
@@ -185,7 +185,7 @@ export function pastePage() {
       const got = splitRecipe(text);
       if (!got.ingredients.length && !got.steps.length) { toast('No ingredients or steps turned up in that. Try typing it in instead.'); return; }
       writeDraft('new', {
-        title: got.title, from: got.from, serves: got.serves, makes: got.makes, prep: got.prep, cook: got.cook || got.total,
+        title: got.title, from: got.from, serves: got.serves, makes: got.makes, prep: got.prep, cook: got.cook, total: got.total,
         ingredients: got.ingredients.join('\n'), steps: got.steps.join('\n'), notes: got.notes, tags: '', source: '', check: '',
       });
       go('/new');

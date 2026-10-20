@@ -445,6 +445,9 @@ input:not([type]), input[type='text'], input[type='search'], input[inputmode], t
 textarea { resize: vertical; min-height: 5em; }
 textarea.hand-input { font: 500 23px/1.25 var(--hand); color: var(--pen); }
 .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+/* Prep, Cook and Total: two to a row on a phone, all three in one row when there's room */
+.three { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+@media (min-width: 560px) { .three { grid-template-columns: 1fr 1fr 1fr; } }
 .tag-ideas { display: flex; flex-wrap: wrap; gap: 6px; margin: -6px 0 16px; }
 .tag-ideas .chip { min-height: 34px; padding: 0 12px; font-size: 14px; }
 .form-actions { position: sticky; bottom: 0; background: var(--card); padding: 12px 0 4px; margin: 0; border-top: 1px solid var(--line); }
