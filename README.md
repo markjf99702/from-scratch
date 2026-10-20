@@ -71,8 +71,9 @@ account chooser next time.
 
 Each device keeps its own copy and works offline. A sync reads the Drive file, merges it with this device's recipes
 one recipe at a time (the most recently changed copy wins, removals included), and writes it back. A device's first
-sync loses nothing, and the same recipe typed on two devices becomes one. If another device saved in the meantime, it
-reads again and merges before writing. Syncs happen a couple of seconds after a change, when you come back to the page,
+sync loses nothing: the same recipe typed word for word on two devices becomes one, and two copies that differ
+anywhere, even only in their notes or tags, both stay. If another device saved in the meantime, it reads again and
+merges before writing. Syncs happen a couple of seconds after a change, when you come back to the page,
 once a minute while it's open, and when you tap the cloud. The cloud's dot is green when synced, amber while syncing,
 and red when Google wants you to sign in again (after an hour); one tap does it.
 

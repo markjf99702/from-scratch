@@ -109,13 +109,16 @@ export const newer = (x, y) => x.t > y.t || (x.t === y.t && (!!x.del !== !!y.del
 export const fold = s => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[’‘]/g, "'").replace(/\s+/g, ' ').trim();
 
 // Two recipes with the same words are the same recipe, even with different ids (typed on two devices, or a link opened on both).
+// Every word counts, notes, tags and times included, so two copies that differ anywhere both stay instead of one
+// losing its notes. Tags count in any order.
 export function fingerprint(r) {
-  return [r.title, r.from, (r.ingredients || []).join('\n'), (r.steps || []).join('\n')].map(fold).join('|');
+  return [r.title, r.from, r.serves, r.makes, r.prep, r.cook, r.total, (r.ingredients || []).join('\n'), (r.steps || []).join('\n'),
+    r.notes, (r.tags || []).map(fold).sort().join(','), r.source].map(fold).join('|');
 }
 
 // Recipe by recipe, the most recently changed copy wins, and a removal wins over anything older.
 // Merging is order-free and repeatable, so every device that syncs ends up with the same box.
-// A device's first sync loses nothing: recipes only on one side are kept, and the same recipe made on
+// A device's first sync loses nothing: recipes only on one side are kept, and the same recipe made word for word on
 // two devices collapses into one (the other id becomes a removal pointing at the one kept).
 export function mergeBoxes(a, b) {
   const recipes = {};

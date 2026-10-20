@@ -585,6 +585,26 @@ test('merging: newest wins, removals win when newer, and duplicates collapse', (
   assert.equal(live(only).length, 2);
 });
 
+test('two copies of a recipe with different notes, tags or times both stay', () => {
+  const card = { title: 'Buttermilk Pancakes', from: 'Mom', ingredients: ['2 cups flour', '2 eggs'], steps: ['Mix.', 'Cook 2 minutes a side.'] };
+  const mine = cleanRecipe({ ...card, id: 'rk3', t: 1000, notes: 'Mark: she used the cast-iron pan.', tags: ['Breakfast'], serves: '4' });
+  const hers = cleanRecipe({ ...card, id: 'ra9', t: 2000, notes: 'Ann: double it for the cousins.', tags: ['Holidays'], source: 'Card in the green tin' });
+  const m = mergeBoxes({ recipes: { rk3: mine } }, { recipes: { ra9: hers } });
+  assert.deepEqual(live(m).map(r => r.id).sort(), ['ra9', 'rk3'], 'neither copy’s notes and tags are lost');
+  assert.equal(canon(mergeBoxes(m, m)), canon(m), 'and merging again changes nothing');
+  for (const [field, a, b] of [['notes', 'Use buttermilk.', 'Use sour milk.'], ['tags', ['Breakfast'], ['Holidays']], ['serves', '4', '6'], ['makes', '12', '16'],
+    ['prep', '10 min', '15 min'], ['cook', '20 min', '25 min'], ['total', '30 min', '40 min'], ['source', 'The green tin', 'An email from Ann']]) {
+    const x = cleanRecipe({ ...card, id: 'x1', t: 1, [field]: a }), y = cleanRecipe({ ...card, id: 'y1', t: 2, [field]: b });
+    assert.equal(live(mergeBoxes({ recipes: { x1: x } }, { recipes: { y1: y } })).length, 2, `copies with different ${field} both stay`);
+  }
+  // Word for word the same, notes and tags included (tags in any order), is still one recipe.
+  const one = cleanRecipe({ ...card, id: 'x1', t: 1, notes: 'Use buttermilk.', tags: ['Breakfast', 'Holidays'], serves: '4' });
+  const two = cleanRecipe({ ...card, id: 'y1', t: 2, notes: 'use buttermilk.', tags: ['holidays', 'Breakfast'], serves: '4' });
+  const same = mergeBoxes({ recipes: { x1: one } }, { recipes: { y1: two } });
+  assert.equal(live(same).length, 1);
+  assert.equal(same.recipes.y1.to, 'x1');
+});
+
 test('a box cleans every recipe and keeps the newest of duplicates', () => {
   const b = cleanBox({ fromScratch: 1, box: { recipes: [{ id: 'a', t: 1, title: 'One' }, { id: 'a', t: 3, title: 'Three' }, { title: '' }, null] } });
   assert.deepEqual(Object.keys(b.recipes), ['a']);
