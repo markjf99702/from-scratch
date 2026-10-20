@@ -577,49 +577,54 @@ body.cooking.has-timers .wake-note { margin-bottom: calc(var(--timers-h, 64px) +
 }
 
 /* ---------- printing ---------- */
+/* #printRoot holds the printable copy, shown only in print. The rules for the copy itself aren't inside @media print,
+   so print.js can also lay an index card out off screen, at its printed size, to see where it runs onto a second card. */
 .print-root { display: none; }
 @media print {
   html, body { background: #fff !important; color: #1d1a17 !important; }
   body > *:not(.print-root) { display: none !important; }
   .print-root { display: block !important; }
-  .pcard { color: #1d1a17; font: 9pt/13pt var(--body); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .p-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0 .2in; border-bottom: 1.5pt solid #dd7a70; padding-bottom: 3pt; }
-  .p-title { font: 650 15pt/1.1 var(--display); margin: 0; }
-  .p-from { margin: 0; font-size: 7.5pt; text-transform: uppercase; letter-spacing: .06em; color: #6e6358; }
-  .p-from b { font: 700 15pt/1 var(--hand); color: #213f7c; text-transform: none; letter-spacing: 0; margin-left: 3pt; padding-right: .15em; } /* room for the handwriting's last stroke at the edge */
-  .p-meta { margin: 2pt 0 0; font-size: 8pt; color: #51473e; line-height: 13pt; }
-  .p-body { margin-top: 0; background: repeating-linear-gradient(to bottom, transparent 0, transparent 12.4pt, #bcd3e6 12.4pt, #bcd3e6 13pt); }
-  .p-ings { list-style: none; margin: 0; padding: 0; }
-  .p-ings li { break-inside: avoid; }
-  .p-ings .amt { font-weight: 800; }
-  .p-ings .amt::after { content: ' '; }
-  .p-ings .note, .p-ings .alt, .p-ings .of { color: #6e6358; }
-  .p-ings .conv { color: #6e6358; }
-  .p-sect { font-weight: 800; font-size: 7.5pt; letter-spacing: .06em; text-transform: uppercase; color: #b5412f; }
-  .p-steps { margin: 0; padding-left: 1.3em; }
-  .p-steps li::marker { font-weight: 800; color: #b5412f; }
-  .p-notes { font: 500 12pt/13pt var(--hand); color: #213f7c; margin: 0; }
-  .p-foot { display: none; }
-  .p-photo { margin: 12pt 0 0; break-inside: avoid; }
-  .p-photo img { max-width: 100%; max-height: 3.6in; border: 1pt solid #ccc; }
-  /* a 4 x 6 inch index card: ingredients and steps in two columns, on the card's lines */
-  html[data-lines='0'] .p-body { background: none; }
-  html[data-print='card'] .p-body { columns: 2; column-gap: .22in; }
-  html[data-print='card'] .p-ings { margin-bottom: 13pt; }
-  html[data-print='card'] .p-steps { break-before: auto; }
-  html[data-print='card'] .p-notes { break-inside: avoid; }
-  html[data-print='card'] .p-ings .amt, html[data-print='card'] .p-ings .what { display: inline; }
-  html[data-print='card'] .p-ings li { display: block; }
-  /* letter or A4 */
-  html[data-print='page'] .pcard { font-size: 11pt; line-height: 17pt; }
-  html[data-print='page'] .p-title { font-size: 26pt; }
-  html[data-print='page'] .p-from b { font-size: 20pt; }
-  html[data-print='page'] .p-head { padding-bottom: 6pt; }
-  html[data-print='page'] .p-meta { font-size: 10pt; margin: 6pt 0 10pt; }
-  html[data-print='page'] .p-body { display: grid; grid-template-columns: 2.6in 1fr; gap: 0 .35in; background: none; }
-  html[data-print='page'] .p-ings li { display: grid; grid-template-columns: 1.05in 1fr; gap: 6pt; padding: 2pt 0; border-bottom: .5pt solid #ddd; }
-  html[data-print='page'] .p-ings .p-sect { display: block; border: 0; padding-top: 8pt; }
-  html[data-print='page'] .p-steps li { margin-bottom: 7pt; }
-  html[data-print='page'] .p-notes { grid-column: 1 / -1; font-size: 16pt; line-height: 1.25; margin-top: 12pt; padding: 8pt 12pt; background: #fbf0c6; }
-  html[data-print='page'] .p-foot { display: block; margin-top: 14pt; font-size: 8pt; color: #999; }
 }
+.print-root .pcard { color: #1d1a17; font: 9pt/13pt var(--body); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.print-root .p-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0 .2in; border-bottom: 1.5pt solid #dd7a70; padding-bottom: 3pt; }
+.print-root .p-title { font: 650 15pt/1.1 var(--display); margin: 0; }
+.print-root .p-from { margin: 0; font-size: 7.5pt; text-transform: uppercase; letter-spacing: .06em; color: #6e6358; }
+.print-root .p-from b { font: 700 15pt/1 var(--hand); color: #213f7c; text-transform: none; letter-spacing: 0; margin-left: 3pt; padding-right: .15em; } /* room for the handwriting's last stroke at the edge */
+.print-root .p-meta { margin: 2pt 0 0; font-size: 8pt; color: #51473e; line-height: 13pt; }
+.print-root .p-body { margin-top: 0; background: repeating-linear-gradient(to bottom, transparent 0, transparent 12.4pt, #bcd3e6 12.4pt, #bcd3e6 13pt); }
+.print-root .p-ings { list-style: none; margin: 0; padding: 0; }
+.print-root .p-ings li { break-inside: avoid; }
+.print-root .p-ings .amt { font-weight: 800; }
+.print-root .p-ings .amt::after { content: ' '; }
+.print-root .p-ings .note, .print-root .p-ings .alt, .print-root .p-ings .of { color: #6e6358; }
+.print-root .p-ings .conv { color: #6e6358; }
+.print-root .p-sect { font-weight: 800; font-size: 7.5pt; letter-spacing: .06em; text-transform: uppercase; color: #b5412f; }
+.print-root .p-steps { margin: 0; padding-left: 1.3em; }
+.print-root .p-steps li::marker { font-weight: 800; color: #b5412f; }
+.print-root .p-notes { font: 500 12pt/13pt var(--hand); color: #213f7c; margin: 0; }
+.print-root .p-foot { display: none; }
+.print-root .p-more { break-before: page; }
+.print-root .p-cont { margin: 0; padding-bottom: 2pt; border-bottom: 1pt solid #dd7a70; font: 650 10pt/13pt var(--display); }
+.print-root .p-cont span { font: 400 8pt var(--body); color: #6e6358; }
+.print-root .p-photo { margin: 12pt 0 0; break-inside: avoid; }
+.print-root .p-photo img { max-width: 100%; max-height: 3.6in; border: 1pt solid #ccc; }
+/* a 4 x 6 inch index card: ingredients and steps in two columns, on the card's lines */
+html[data-lines='0'] .print-root .p-body { background: none; }
+html[data-print='card'] .print-root .p-body { columns: 2; column-gap: .22in; }
+html[data-print='card'] .print-root .p-ings { margin-bottom: 13pt; }
+html[data-print='card'] .print-root .p-steps { break-before: auto; }
+html[data-print='card'] .print-root .p-notes { break-inside: avoid; }
+html[data-print='card'] .print-root .p-ings .amt, html[data-print='card'] .print-root .p-ings .what { display: inline; }
+html[data-print='card'] .print-root .p-ings li { display: block; }
+/* letter or A4 */
+html[data-print='page'] .print-root .pcard { font-size: 11pt; line-height: 17pt; }
+html[data-print='page'] .print-root .p-title { font-size: 26pt; }
+html[data-print='page'] .print-root .p-from b { font-size: 20pt; }
+html[data-print='page'] .print-root .p-head { padding-bottom: 6pt; }
+html[data-print='page'] .print-root .p-meta { font-size: 10pt; margin: 6pt 0 10pt; }
+html[data-print='page'] .print-root .p-body { display: grid; grid-template-columns: 2.6in 1fr; gap: 0 .35in; background: none; }
+html[data-print='page'] .print-root .p-ings li { display: grid; grid-template-columns: 1.05in 1fr; gap: 6pt; padding: 2pt 0; border-bottom: .5pt solid #ddd; }
+html[data-print='page'] .print-root .p-ings .p-sect { display: block; border: 0; padding-top: 8pt; }
+html[data-print='page'] .print-root .p-steps li { margin-bottom: 7pt; }
+html[data-print='page'] .print-root .p-notes { grid-column: 1 / -1; font-size: 16pt; line-height: 1.25; margin-top: 12pt; padding: 8pt 12pt; background: #fbf0c6; }
+html[data-print='page'] .print-root .p-foot { display: block; margin-top: 14pt; font-size: 8pt; color: #999; }

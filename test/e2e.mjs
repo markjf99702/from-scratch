@@ -487,6 +487,13 @@ const letter = await printAs('letter', 'june-letter.pdf');
 assert.deepEqual([letter.w, letter.h], [612, 792], 'letter paper');
 assert.equal(letter.pages, 1);
 assert.match(await page.locator('#printRoot').innerText(), /From the kitchen of\s+Aunt June/i);
+// A recipe too long for one card carries on to a second, which starts with its name.
+await page.goto(base + '#/r/sample-rosa-coffee-cake');
+const rosa = await printAs('card', 'rosa-card.pdf');
+assert.equal(rosa.pages, 2, 'two cards, and no page left over');
+assert.equal(await page.locator('#printRoot .pcard').count(), 2);
+assert.equal(await page.locator('#printRoot .pcard + .pcard .p-cont').innerText(), 'Cinnamon Crumb Coffee Cake (continued)');
+assert.equal(await page.locator('#printRoot .pcard + .pcard .p-steps').getAttribute('start'), '6', 'the steps go on from 6');
 
 // ---------- removing, with undo ----------
 await page.goto(base + `#/r/${fudge}`);

@@ -46,8 +46,8 @@ screen kept on. It syncs across your own devices through Google Drive, and a rec
   low end and says what the card allows.
 - **Send it to family.** A recipe goes as a link, with its notes and whose it is. They open it and save a copy in their
   own box. The recipe travels inside the link, after the #, so nothing is uploaded anywhere.
-- **Print it** on a 4 × 6 inch index card, with or without ruled lines (a long one carries on to a second card), or on
-  letter or A4 paper with the photo of the card.
+- **Print it** on a 4 × 6 inch index card, with or without ruled lines (a long one carries on to a second card, which
+  starts with its name), or on letter or A4 paper with the photo of the card.
 - No account and no server. It works offline and installs to a phone's home screen. Save a backup file (with the card
   photos if you like) and load it on another device.
 
