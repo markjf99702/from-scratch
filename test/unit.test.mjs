@@ -511,6 +511,40 @@ Beat the filling and pour over the hot crust.`);
   assert.equal(s.notes, '');
 });
 
+test('a pasted recipe with no headings starts its steps at a sentence after a blank line', () => {
+  const r = splitRecipe(`Chocolate Chip Cookies
+
+2 1/4 cups flour
+1 tsp baking soda
+1 cup butter, softened
+3/4 cup sugar
+2 eggs
+2 cups chocolate chips
+
+Preheat oven to 375 degrees.
+Combine flour and baking soda in small bowl.
+Beat butter and sugar until creamy.
+Bake for 9 to 11 minutes or until golden brown.`);
+  assert.equal(r.title, 'Chocolate Chip Cookies');
+  assert.deepEqual(r.ingredients, ['2 1/4 cups flour', '1 tsp baking soda', '1 cup butter, softened', '3/4 cup sugar', '2 eggs', '2 cups chocolate chips']);
+  assert.deepEqual(r.steps, ['Preheat oven to 375 degrees.', 'Combine flour and baking soda in small bowl.', 'Beat butter and sugar until creamy.', 'Bake for 9 to 11 minutes or until golden brown.']);
+  // A line after a blank one that still reads as an ingredient stays one, and so does a section heading.
+  const s = splitRecipe(`Shortcake
+
+2 cups flour
+1/2 cup butter
+
+Salt, to taste.
+
+Topping:
+1 quart strawberries
+
+Heat the oven (425°F)
+Rub the butter into the flour.`);
+  assert.deepEqual(s.ingredients, ['2 cups flour', '1/2 cup butter', 'Salt, to taste.', 'Topping:', '1 quart strawberries']);
+  assert.deepEqual(s.steps, ['Heat the oven (425°F)', 'Rub the butter into the flour.']);
+});
+
 // ---------- recipes and boxes ----------
 test('cleaning a recipe keeps its shape and drops junk', () => {
   const r = cleanRecipe({ title: '  Pie  ', from: 'Nana', ingredients: ['1 cup flour', { h: 'Filling' }, { qty: '2', unit: 'cups', item: 'apples', note: 'sliced' }, '', 7], steps: '1. Mix\n2. Bake', tags: 'Pie, pie, Dessert', rating: 9, t: 5, unsure: 'the oven temperature is smudged' });

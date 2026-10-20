@@ -334,7 +334,8 @@ export function shortTime(s) {
 
 // Pasted text → { title, from, serves, makes, prep, cook, ingredients: [], steps: [], notes }.
 // It looks for headings like "Ingredients" and "Directions"; without them, a run of lines that start with an
-// amount is the ingredient list, and the sentences after it are the steps.
+// amount is the ingredient list, and the sentences after it are the steps (after a blank line, one sentence with no
+// amount is enough to start them).
 export function splitRecipe(text) {
   const out = { title: '', from: '', serves: '', makes: '', prep: '', cook: '', total: '', ingredients: [], steps: [], notes: '' };
   const lines = String(text || '').replace(/\r\n?/g, '\n').split('\n').map(l => l.replace(/\s+/g, ' ').trim());
@@ -357,7 +358,9 @@ export function splitRecipe(text) {
     if (mode === 'ing') {
       const h = headingOf(line);
       if (looksLikeIngredient(line) || (h && !looksLikeStep(line))) { out.ingredients.push(line.replace(/^[-•*·▪◦]\s+/, '')); continue; }
-      if (looksLikeStep(line) || /^[A-Z][a-z]+ (the|in|a|all|together|until|to|over)\b/.test(line)) mode = 'steps';
+      // After a blank line, a line with no amount that ends like a sentence ("Preheat oven to 375 degrees.") is a step.
+      const sentence = wasBlank && out.ingredients.length > 0 && /[.!)]$/.test(line) && parseLine(line)?.q == null;
+      if (sentence || looksLikeStep(line) || /^[A-Z][a-z]+ (the|in|a|all|together|until|to|over)\b/.test(line)) mode = 'steps';
       else { out.ingredients.push(line); continue; }
     }
     if (mode === 'steps') {
